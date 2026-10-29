@@ -1,0 +1,352 @@
+.map-screen {
+  position: fixed;
+  inset: 0;
+  left: 50%;
+  width: min(100%, var(--app-max));
+  transform: translateX(-50%);
+  overflow: hidden;
+  background: var(--map-base);
+}
+
+.map-stage {
+  position: absolute;
+  inset: 0;
+}
+
+.map-stage .field-map {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  overflow: visible;
+  transition: top 0.25s ease, height 0.25s ease;
+  touch-action: manipulation;
+}
+
+/* 지도 위 카드 */
+.map-top {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: calc(var(--sp-3) + env(safe-area-inset-top)) var(--sp-4) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  pointer-events: none;
+}
+
+.map-top > * {
+  pointer-events: auto;
+}
+
+.map-top__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.farm-card {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 60px;
+  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-2);
+  border-radius: var(--r-lg);
+  background: var(--surface-glass);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px var(--shadow);
+  color: var(--text);
+  text-decoration: none;
+  min-width: 0;
+}
+
+.farm-card__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.farm-card__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.farm-card__name .icon {
+  color: var(--text-3);
+}
+
+.farm-card__meta {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.weather-card {
+  padding: 10px var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--surface-glass);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.weather-card__metrics {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.wx {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+
+.wx__icon {
+  color: var(--text-3);
+}
+
+.wx__icon--sun {
+  color: var(--sun);
+}
+
+.wx__temp {
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.wx__sky,
+.wx__label {
+  color: var(--text-2);
+}
+
+.wx strong {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.weather-card__line {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.wx-roll {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.wx-roll__text {
+  display: block;
+  animation: wx-roll-in 0.4s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes wx-roll-in {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wx-roll__text { animation: none; }
+}
+
+/* 아래 시트 */
+.zone-sheet {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: var(--nav-h);
+  max-height: calc(100% - var(--nav-h) - 120px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 var(--sp-4) var(--sp-3);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -12px 32px var(--shadow);
+}
+
+.zone-sheet__handle {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: calc(100% + var(--sp-8));
+  margin: 0 calc(var(--sp-4) * -1);
+  height: 22px;
+  background: var(--surface);
+  touch-action: none;
+}
+
+.zone-sheet__handle span {
+  width: 44px;
+  height: 5px;
+  border-radius: var(--r-pill);
+  background: var(--line-strong);
+}
+
+.zone-sheet__head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: rise 0.28s ease;
+}
+
+.zone-sheet__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.zone-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.zone-sheet__title {
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.zone-stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.zone-stats li + li::before {
+  content: '·';
+  margin-right: var(--sp-2);
+  color: var(--text-3);
+}
+
+.zone-stats strong {
+  color: var(--text);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.zone-sheet__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+  animation: rise 0.25s ease;
+}
+
+.zs-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.zs-section-head h3 {
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+
+.inv-list {
+  list-style: none;
+  margin: 0 calc(var(--sp-4) * -1);
+  padding: 2px var(--sp-4);
+  display: flex;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 var(--sp-4);
+  scrollbar-width: none;
+}
+
+.inv-list::-webkit-scrollbar {
+  display: none;
+}
+
+.inv-list li {
+  flex: 0 0 172px;
+  scroll-snap-align: start;
+}
+
+.inv-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  height: 100%;
+  padding: 10px var(--sp-3) var(--sp-3) 10px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text);
+  text-decoration: none;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.inv-card:active {
+  transform: scale(0.98);
+}
+
+.inv-card__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.inv-card__body .badge {
+  margin-top: 6px;
+}
+
+.inv-card__name {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.inv-card__form {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  line-height: 1.3;
+}
+
+.zone-sheet__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.zone-sheet__actions .btn--lg {
+  min-height: 54px;
+}
+
+.zone-sheet__actions .btn--soft {
+  min-height: 46px;
+}

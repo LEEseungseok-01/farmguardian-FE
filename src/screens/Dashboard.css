@@ -1,0 +1,312 @@
+.dash-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+.dash-page .zone-tabs {
+  display: flex;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  margin: 0 calc(var(--sp-4) * -1);
+  padding: 2px var(--sp-4);
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+}
+
+.dash-page .zone-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* 요약 — 숫자가 먼저, 결론이 그다음, 막대는 근거 */
+.sum {
+  padding: var(--sp-5);
+  border-radius: var(--r-xl);
+  background: var(--surface);
+}
+
+.sum__label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.sum__big {
+  margin-top: 2px;
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.sum__big span {
+  margin-left: 2px;
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.sum__line {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+
+
+.sum__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: var(--sp-4);
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.sum__note .icon {
+  flex: none;
+  margin-top: 1px;
+  color: var(--text-3);
+}
+
+.sum--warn .sum__note .icon {
+  color: var(--caution-fg);
+}
+
+/* 계통별 횟수 */
+.mix {
+  list-style: none;
+  margin: var(--sp-5) 0 0;
+  padding: var(--sp-4) 0 0;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.mix__row {
+  display: grid;
+  grid-template-columns: 1fr 72px 34px;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.mix__name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.mix__name em {
+  margin-left: 4px;
+  font-size: var(--fs-xs);
+  font-style: normal;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.mix__name > span {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.mix__bar {
+  display: block;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+/* 색은 한 가지. 한 계통에 몰렸을 때만 그 줄이 색을 바꾼다 */
+.mix__bar span {
+  display: block;
+  height: 100%;
+  min-width: 8px;
+  border-radius: var(--r-pill);
+  background: var(--line-strong);
+}
+
+.mix__row.is-heavy .mix__bar span {
+  background: var(--caution-solid);
+}
+
+.mix__row.is-heavy .mix__name {
+  color: var(--caution-fg);
+}
+
+.mix__value {
+  text-align: right;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.lede {
+  margin: calc(var(--sp-3) * -1) 0 var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.fine {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+.dash-page .btn--soft {
+  margin-top: var(--sp-3);
+}
+
+/* 접힌 줄에 붙는 겹침 표시 */
+.fold > summary em {
+  flex: none;
+  padding: 0 7px;
+  border-radius: var(--r-xs);
+  background: var(--caution-bg);
+  color: var(--caution-fg);
+  font-size: var(--fs-xs);
+  font-style: normal;
+  font-weight: 700;
+  line-height: 22px;
+}
+
+.nbr__flag {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0 0 var(--sp-3);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.fold--warn .nbr__flag {
+  background: var(--caution-bg);
+  color: var(--caution-fg);
+}
+
+.nbr__flag .icon {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* 접는 칸 */
+.fold {
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.fold > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 56px;
+  padding: 0 var(--sp-4);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold > summary > span {
+  flex: 1;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+.fold > summary .icon {
+  flex: none;
+  color: var(--text-3);
+  transition: transform 0.2s;
+}
+
+.fold[open] > summary .icon {
+  transform: rotate(180deg);
+}
+
+.region-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.region-row {
+  display: grid;
+  grid-template-columns: 82px 1fr 60px;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.region-row__name {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.region-row__name em {
+  padding: 0 5px;
+  border-radius: var(--r-xs);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: var(--fs-xs);
+  font-style: normal;
+  font-weight: 700;
+}
+
+.region-row.is-mine .region-row__name {
+  font-weight: 800;
+}
+
+.region-row__bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.region-row__bar span {
+  flex-basis: 0;
+}
+
+.region-row__top {
+  text-align: right;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.fold .fine {
+  padding: var(--sp-4);
+}
+
+.dash-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-2);
+}
