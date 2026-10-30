@@ -9,6 +9,7 @@ import { DRUGS, PESTS, drugById, pestById, zoneName, type SprayRecord } from '..
 import { fmtMD, monthOf, weekday } from '../lib/date'
 import { useApp } from '../state/AppState'
 import './History.css'
+import { EmptyArt } from '../components/EmptyArt'
 
 export default function History() {
   const { records, farmZones, zones, setRecordCancelled, today, showToast, zone: currentZone } = useApp()
@@ -76,9 +77,9 @@ export default function History() {
 
         {list.length === 0 ? (
           <div className="empty">
-            <Icon name="clipboard-text" size={32} />
+            <EmptyArt kind="record" />
             <p>아직 기록이 없어요</p>
-            <p className="empty__hint">판정 화면에서 기록하거나, 지난 기록을 추가해 보세요.</p>
+            <p className="empty__hint">판정 화면에서 기록할 수 있어요</p>
           </div>
         ) : (
           months.map((m) => (

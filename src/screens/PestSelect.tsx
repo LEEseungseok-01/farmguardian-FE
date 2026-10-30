@@ -11,6 +11,7 @@ import { josa } from '../lib/korean'
 import { registeredDrugs } from '../lib/verdict'
 import { useApp } from '../state/AppState'
 import './PestSelect.css'
+import { EmptyArt } from '../components/EmptyArt'
 
 const PARTS: { key: Part; icon: ReactElement }[] = [
   { key: '잎', icon: <Icon name="leaf" size={30} /> },
@@ -108,9 +109,9 @@ export default function PestSelect() {
 
         {list.length === 0 ? (
           <div className="empty">
-            <Icon name="magnifying-glass" size={32} />
+            <EmptyArt kind="search" />
             <p>{q || part ? '검색 결과가 없어요' : `아직 ${zone.crop} 병해충 자료가 없어요`}</p>
-            {(q || part) && <p className="empty__hint">다른 이름으로 검색하거나 부위 선택을 풀어 보세요.</p>}
+            {(q || part) && <p className="empty__hint">{q ? '이름을 줄여 보세요' : '부위를 풀어 보세요'}</p>}
           </div>
         ) : (
           <ul className="pest-list">

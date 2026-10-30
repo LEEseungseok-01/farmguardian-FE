@@ -8,6 +8,7 @@ import { zoneName } from '../data/mock'
 import { LIST_ORDER, STATUS_META, evaluate, registeredDrugs, sortVerdicts } from '../lib/verdict'
 import { useApp } from '../state/AppState'
 import './DrugList.css'
+import { EmptyArt } from '../components/EmptyArt'
 
 export default function DrugList() {
   const { zone, farmZones, selectZone, pestOf, records, today, inventory } = useApp()
@@ -70,7 +71,7 @@ export default function DrugList() {
 
         {verdicts.length === 0 ? (
           <div className="empty">
-            <Icon name="flask" size={32} />
+            <EmptyArt kind="drug" />
             <p>
               {pest ? `${zone.crop} ${pest.name}에 등록된 약이 없어요` : `아직 ${zone.crop} 병해충 자료가 없어요`}
             </p>

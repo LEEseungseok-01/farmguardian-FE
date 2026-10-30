@@ -310,3 +310,12 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--sp-2);
 }
+
+/* 아직 쌓인 게 없을 때 막대 자리에 들어간다 */
+.sum__art {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+}

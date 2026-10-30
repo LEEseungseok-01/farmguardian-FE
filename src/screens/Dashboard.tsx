@@ -9,6 +9,7 @@ import { eul } from '../lib/korean'
 import { evaluate, groupColor, registeredDrugs, seasonRecords } from '../lib/verdict'
 import { useApp } from '../state/AppState'
 import './Dashboard.css'
+import { EmptyArt } from '../components/EmptyArt'
 
 export default function Dashboard() {
   const { currentFarm, farmZones, zone, selectZone, records, today, pestOf, inventory } = useApp()
@@ -87,7 +88,11 @@ export default function Dashboard() {
                   : `서로 다른 약 ${rows.length}가지를 돌려 썼어요`}
           </p>
 
-          {rows.length > 0 && (
+          {rows.length === 0 ? (
+            <div className="sum__art">
+              <EmptyArt kind="chart" size={124} />
+            </div>
+          ) : (
             <ul className="mix">
               {rows.map((s) => (
                 <li key={`${s.kind}-${s.group}`} className={`mix__row${heavy === s ? ' is-heavy' : ''}`}>
