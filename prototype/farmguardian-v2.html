@@ -536,7 +536,7 @@ const PAPERS=[
   single:'대부분 지역 80% 이상 · 청양·무주 100%',
   cite:'한국농약과학회지 29(4), 2025'}
 ];
-/* FR-602 OCR — P1. 이력 입력 화면에서만 쓴다 */
+/* FR-602 OCR — P0. 판정 입구와 이력 입력, 두 곳에서 쓴다 */
 const OCR={raw:['(주)팜한농','델리게이트 입상수화제','스피네토람 25%','제조일자 2026.03.11','유효기간 제조일로부터 3년'],
   cands:[2,8]};
 /* FR-601 기상청 단기예보 — 판정과 분리 (api-spec API-31) */
@@ -851,6 +851,29 @@ function logEditor(z){
   ${S.ocr?ocrBlock(z):`<button class="xbtn" data-ocr="1" style="justify-self:start">
     포장지 찍어서 입력하기</button>`}`;
 }
+/* 판정 입구용. 홈에서 띄운다. 날짜를 묻지 않는다 — 지금 쓸 약을 고르는 자리다 */
+function ocrSheet(){
+  const sel=S.ocrPick?drug(S.ocrPick):null;
+  return `<div class="scrim" data-ocrj="0"></div>
+  <div class="sheet" role="dialog" aria-label="봉지 찍어서 약 찾기">
+    <span class="grab"></span>
+    <div class="sh"><h2>봉지에서 읽은 글자</h2><span class="spacer"></span>
+      <button class="xbtn" data-ocrj="0">닫기</button></div>
+    <div class="ocr"><pre>${OCR.raw.map(l=>/델리게이트/.test(l)?`<b>${esc(l)}</b>`:esc(l)).join('\n')}</pre>
+    <p style="margin:0;font-size:12.5px;color:var(--ink-2)">
+      약 이름으로 보이는 줄을 자료와 맞춰 봤습니다. <b>어느 제품인지는 직접 고르세요.</b></p>
+    ${OCR.cands.map(id=>{const d=drug(id);
+      return `<button class="drow" data-ocrpick="${id}" aria-current="${S.ocrPick===id}">
+        <span class="n">${d.b}</span><span style="font-size:11px;color:var(--ink-2)">${d.p}</span>
+        ${moa(d.ing[0][1])}</button>`}).join('')}
+    <button class="btn" data-ocrjudge="1" ${sel?'':'disabled'}>
+      ${sel?`${esc(sel.b)}으로 판정하기`:'위에서 약을 고르세요'}</button>
+    <p class="caveat">읽은 결과를 그대로 판정에 넣지 않습니다. <b>고른 약으로만 판정합니다.</b><br>
+      글자가 안 읽히거나 맞는 약이 없으면 직접 찾으면 됩니다.</p>
+    <button class="xbtn" data-view="pest" style="justify-self:start">직접 찾기</button>
+    </div>
+  </div>`;
+}
 function ocrBlock(z){
   const sel=S.ocrPick?drug(S.ocrPick):null;
   return `<div class="ocr">
@@ -875,6 +898,10 @@ function ocrBlock(z){
 }
 
 /* ═══════════ 모바일 화면 ═══════════ */
+const CAM=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"
+  style="width:18px;height:18px;vertical-align:-3px;margin-right:6px">
+  <path d="M3 8.5a2 2 0 0 1 2-2h2l1.2-2h7.6L17 6.5h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+  <circle cx="12" cy="12.5" r="3.4"/></svg>`;
 const GEAR=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
   <circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7L5.6 5.6"/></svg>`;
 function aHome(){
@@ -905,7 +932,9 @@ function aHome(){
       <span class="n">${v.cand.b}</span><span class="i">${v.cand.p}</span>
       <span class="f">${chip(v.state)}${moa(v.cand.ing[0][1])}</span></button>`).join('')}</div>
     <button class="btn ghost" data-view="pest">다른 약 찾기</button>
+    <button class="btn ghost" data-ocrj="1">${CAM} 봉지 찍어서 찾기</button>
   </div>
+  ${S.ocrj?ocrSheet():''}
   ${S.cases?casesSheet():''}`;
 }
 /* FR-201 부위 · FR-202 후보 · FR-204 이름 검색 */
@@ -1496,7 +1525,7 @@ function guideCard(){
 }
 
 let S={proto:'O',view:'home',stack:[],field:1,zone:'A',pest:MOTH,drug:1,part:null,q:'',
-  saved:false,cases:false,bk:null,myun:'dg',wx:true,dup:false,pick:null,ocr:false,ocrPick:null,
+  saved:false,cases:false,bk:null,myun:'dg',wx:true,dup:false,pick:null,ocr:false,ocrj:false,ocrPick:null,
   guide:false, nf:{crop:'배추',planted:'2026-09-01',n:3}};
 const go=v=>{S.stack.push(S.view); S.view=v};
 
@@ -1531,7 +1560,7 @@ document.addEventListener('change',e=>{
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-proto],[data-view],[data-back],[data-zone],[data-field],[data-drug],'+
     '[data-pest],[data-part],[data-q],[data-cases],[data-case],[data-save],[data-dup],[data-bk],'+
-    '[data-wx],[data-void],[data-add],[data-ocr],[data-ocrpick],[data-ocrsave],[data-reset],'+
+    '[data-wx],[data-void],[data-add],[data-ocr],[data-ocrj],[data-ocrjudge],[data-ocrpick],[data-ocrsave],[data-reset],'+
     '[data-myun],[data-parcel],[data-nfn],[data-newfield],[data-split],[data-guide]');
   if(!t)return;
   const d=t.dataset, pc=S.proto==='B', z=zone(S.zone);
@@ -1539,7 +1568,7 @@ document.addEventListener('click',e=>{
   if(d.guide!=null){const g=d.guide==='1'; if(g===S.guide)return; S.guide=g}
   else if(d.proto){S.proto=d.proto; S.view='home'; S.stack=[]; S.saved=false; S.cases=false; S.dup=false; S.guide=false}
   else if(d.view!=null){S.cases=false; if(S.proto==='A')go(d.view)}
-  else if(d.back!=null){S.view=S.stack.pop()||'home'; S.saved=false; S.bk=null; S.dup=false; S.ocr=false}
+  else if(d.back!=null){S.view=S.stack.pop()||'home'; S.saved=false; S.bk=null; S.dup=false; S.ocr=false; S.ocrj=false}
   else if(d.zone){S.zone=d.zone; S.saved=false; S.dup=false}
   else if(d.field){S.field=+d.field; S.zone=Z()[0].id; S.saved=false; S.dup=false}
   else if(d.drug){S.drug=+d.drug; S.pest=drug(+d.drug).pest; S.saved=false; S.dup=false; S.bk=null;
@@ -1565,6 +1594,8 @@ document.addEventListener('click',e=>{
   else if(d.add!=null){const fd=document.getElementById('fd'),fu=document.getElementById('fu');
     if(fd&&fd.value){addLog(z,fd.value,+fu.value); S.saved=false}}
   else if(d.ocr!=null){S.ocr=d.ocr==='1'; S.ocrPick=null}
+  else if(d.ocrj!=null){S.ocrj=d.ocrj==='1'; S.ocrPick=null}
+  else if(d.ocrjudge!=null&&S.ocrPick){S.drug=S.ocrPick; S.ocrj=false; S.ocrPick=null; go('detail')}
   else if(d.ocrpick!=null) S.ocrPick=+d.ocrpick;
   else if(d.ocrsave!=null){const od=document.getElementById('od');
     if(S.ocrPick&&od&&od.value){addLog(z,od.value,S.ocrPick); S.ocr=false; S.ocrPick=null}}
