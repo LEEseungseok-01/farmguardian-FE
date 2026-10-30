@@ -1,4 +1,13 @@
 .DS_Store
+archive/
+.env
+.env.*
+!.env.example
 
-# 내부 문서는 올리지 않는다 (심사 자평·교수님 메일 초안)
+# 내부 자료. 레포가 공개라 올리지 않는다
 docs/internal/
+docs/api-keys.md
+
+# 노드 산출물
+node_modules/
+dist/

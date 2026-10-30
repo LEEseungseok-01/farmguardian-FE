@@ -32,6 +32,6 @@ API-30,P0,누적,GET,/zones/{zoneId}/mechanism-distribution,계열 누적 분포
 API-31,P0,날씨,GET,/zones/{zoneId}/weather/precipitation,강수 조회,이 구역에 비 오나,혜빈,Yes,No,"FR-601, BE-23",,명세 초안
 API-32,P0,공통,GET,/data-sources,데이터 출처 조회,데이터 출처와 기준일은,미정,Yes,No,NFR-08,,명세 초안
 API-33,P1,누적,GET,/pesticides/{pesticideId}/papers,약 논문 실측값 조회,이 약의 논문 실측값은,미정,Yes,No,FR-504,P0 끝난 후 검토,명세 초안
-API-34,P1,기록 보조,POST,/ocr/pesticide-labels,포장지 OCR,포장지 사진에서 약 이름 찾기,미정,Yes,No,FR-602,P0 끝난 후 검토,명세 초안
+API-34,P0,기록 보조,POST,/ocr/pesticide-labels,포장지 OCR,포장지 사진에서 약 이름 찾기,준혁,Yes,No,FR-602,Claude API claude-haiku-5-5. 키는 BE 환경변수. 사진 1장 약 0.4원,명세 확정
 API-35,P1,기록 보조,POST,/pesticides/{pesticideId}/dilution-calculations,희석 계산,물 몇 L에 약 얼마나 타나,미정,Yes,No,FR-603,P0 끝난 후 검토,명세 초안
 API-36,P2,누적,GET,/stats/regions/mechanism-distribution,지역별 계열 분포,지역별로 어느 계열을 많이 쓰나,미정,Yes,No,FR-503,추후 고도화,명세 초안
