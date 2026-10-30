@@ -169,7 +169,7 @@ export default function Fields() {
                   <p className={`zone-edit__status${planted ? '' : ' is-pre'}`}>
                     <Icon name={planted ? 'plant' : 'shovel'} size={18} />
                     {planted
-                      ? `심은 지 ${diffDays(today, z.plantedAt!)}일${z.harvestAt ? `, 수확까지 ${diffDays(z.harvestAt, today)}일` : ' · 수확 예정일을 넣어주세요'}`
+                      ? `심은 지 ${diffDays(today, z.plantedAt!)}일${z.harvestAt ? `, 수확까지 ${diffDays(z.harvestAt, today)}일` : ', 수확 예정일을 넣어 주세요'}`
                       : '아직 심기 전이에요'}
                   </p>
                   {farmZones.length > 1 && (
@@ -203,7 +203,7 @@ export default function Fields() {
             ? `‘${pending.zone.name}’ 구역을 삭제할까요?`
             : `작물을 ${pending ? ro(pending.crop) : ''} 바꿀까요?`
         }
-        confirmLabel={pending?.type === 'delete' ? '삭제' : '바꾸기'}
+        confirmLabel={pending?.type === 'delete' ? '삭제하기' : '바꾸기'}
         onConfirm={confirm}
         onCancel={() => setPending(null)}
       >

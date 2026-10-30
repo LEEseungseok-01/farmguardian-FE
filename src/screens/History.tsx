@@ -222,7 +222,7 @@ function AddRecordSheet({ onClose, today, defaultZone }: { onClose: () => void; 
       sub="앱을 쓰기 전에 뿌린 것도 넣으면 판정이 더 정확해져요"
       footer={
         <button type="submit" form="add-record" className="btn btn--primary btn--lg" disabled={!validDrug}>
-          저장
+          저장하기
         </button>
       }
     >

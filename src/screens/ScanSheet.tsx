@@ -98,7 +98,7 @@ export default function ScanSheet() {
             </button>
           </div>
           <button type="button" className="text-btn" onClick={() => start('sample')}>
-            예시로 해 볼게요
+            예시 사진으로 해 보기
             <Icon name="caret-right" size={16} />
           </button>
         </div>
@@ -180,11 +180,11 @@ export default function ScanSheet() {
       <ul className={`scan-warn${phase === 'idle' ? ' is-hidden' : ''}`} aria-label="꼭 알아 두세요">
         <li>
           <Icon name="warning-circle" size={20} weight="fill" />
-          읽은 글자는 그대로 쓰지 않습니다. 고른 약으로만 판정합니다.
+          읽은 글자는 그대로 쓰지 않아요. 고른 약으로만 판정해요.
         </li>
         <li>
           <Icon name="calendar-blank" size={20} weight="fill" />
-          봉지에 적힌 날짜는 만든 날이지 뿌린 날이 아닙니다.
+          봉지에 적힌 날짜는 만든 날이지 뿌린 날이 아니에요.
         </li>
       </ul>
     </Sheet>

@@ -18,7 +18,7 @@ const FEATURES: { title: string; body: string }[] = [
   },
   {
     title: '올해 몇 번 뿌렸는지 세어 둬요',
-    body: '구역마다 따로 셉니다. 횟수를 넘기기 전에 막아 드려요.',
+    body: '구역마다 횟수를 따로 봐요. 넘기기 전에 막아 드려요.',
   },
   {
     title: '같은 약만 쓰는 걸 알려 줘요',

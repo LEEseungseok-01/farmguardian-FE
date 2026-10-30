@@ -50,7 +50,7 @@ export default function DrugList() {
               <span className="pest-strip__name">{pest.name}</span>
             </span>
             <span className="pest-strip__change">
-              변경
+              바꾸기
               <Icon name="caret-right" size={16} />
             </span>
           </Link>

@@ -46,6 +46,7 @@ export default function Dashboard() {
     : []
 
   // 내 면에서 가장 많이 쓰는 계통. 내가 쓴 것과 겹치면 저항성이 넘어온다
+  const county = currentFarm.address.split(' ').find((w) => /[군시]$/.test(w)) ?? ''
   const mine = REGION_STATS.find((r) => r.name === currentFarm.region)
   const [regionTop, regionShare] = mine ? mine.shares.reduce((a, b) => (b[1] > a[1] ? b : a)) : ['', 0]
   const overlap = rows.find((r) => r.group === regionTop)
@@ -78,12 +79,12 @@ export default function Dashboard() {
           </p>
           <p className="sum__line">
             {total === 0
-              ? `${zoneName(zone)}에 아직 뿌린 기록이 없습니다`
+              ? `${zoneName(zone)}에 아직 뿌린 기록이 없어요`
               : heavy
-                ? `${eul(heavy.names.length > 1 ? `${heavy.group}번 계통` : heavy.names[0])} ${heavy.n}번 썼습니다`
+                ? `${eul(heavy.names.length > 1 ? `${heavy.group}번 계통` : heavy.names[0])} ${heavy.n}번 썼어요`
                 : rows.length === 1
-                  ? `${rows[0].names[0]} 한 가지만 썼습니다`
-                  : `서로 다른 약 ${rows.length}가지를 돌려 썼습니다`}
+                  ? `${rows[0].names[0]} 한 가지만 썼어요`
+                  : `서로 다른 약 ${rows.length}가지를 돌려 썼어요`}
           </p>
 
           {rows.length > 0 && (
@@ -110,12 +111,12 @@ export default function Dashboard() {
             {heavy ? (
               <>
                 <Icon name="warning" weight="fill" size={18} />
-                같은 계통을 거듭 쓰면 그 약에 견디는 벌레만 남습니다.
+                같은 계통을 거듭 쓰면 그 약에 견디는 벌레만 남아요.
               </>
             ) : (
               <>
                 <Icon name="info" size={18} />
-                계통은 약이 벌레를 죽이는 방식입니다. 번호가 같으면 성분이 달라도 같은 방식이에요.
+                계통은 약이 벌레를 죽이는 방식이에요. 번호가 같으면 성분이 달라도 같은 방식이에요.
               </>
             )}
           </p>
@@ -156,7 +157,7 @@ export default function Dashboard() {
             <summary>
               이웃 농가는 뭘 쓰나
               {overlap && <em>겹침</em>}
-              <span>평창군 배추, 최근 30일</span>
+              <span>{county} {zone.crop}, 최근 30일</span>
               <Icon name="caret-down" size={18} />
             </summary>
             <p className="nbr__flag">
