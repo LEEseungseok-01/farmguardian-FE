@@ -54,7 +54,7 @@ export function EmptyArt({ kind, size = 132 }: { kind: ArtKind; size?: number })
       className={`art art--${kind}`}
     >
       <g
-        style={{ stroke: 'var(--logo-draw)' }}
+        style={{ stroke: 'var(--logo-line)' }}
         strokeWidth="3.6"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -63,7 +63,7 @@ export function EmptyArt({ kind, size = 132 }: { kind: ArtKind; size?: number })
         {kind === 'record' && (
           <>
             {/* 펼친 장부. 줄이 하나씩 그어진다 */}
-            <path d="M10 44 L66 44 L66 96 L10 96 Z" style={{ fill: 'var(--logo-face)' }} />
+            <path d="M10 44 L66 44 L66 96 L10 96 Z" style={{ fill: 'var(--surface)' }} />
             <path d="M38 44 L38 96" strokeWidth="2.4" />
             <g strokeWidth="2.6" className="art__line">
               <path d="M17 58 L31 58" />
@@ -107,7 +107,7 @@ export function EmptyArt({ kind, size = 132 }: { kind: ArtKind; size?: number })
             </g>
             {/* 거꾸로 든 빈 봉지. 털어도 아무것도 안 나온다 */}
             <g className="art__pouch">
-              <path d="M90 34 L120 34 L116 82 L94 82 Z" style={{ fill: 'var(--logo-face)' }} />
+              <path d="M90 34 L120 34 L116 82 L94 82 Z" style={{ fill: 'var(--surface)' }} />
               <path d="M90 46 L119 46" strokeWidth="2.4" />
               <path d="M97 60 L112 60" strokeWidth="2.4" />
             </g>
