@@ -1,6 +1,6 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AppBar } from '../components/AppBar'
-import { DrugCard, GroupChip } from '../components/DrugCard'
+import { DrugCard, GroupChip, ReasonTag } from '../components/DrugCard'
 import { Icon } from '../components/Icon'
 import { CompanyMark, ProductArt } from '../components/ProductArt'
 import { StatusBadge } from '../components/StatusBadge'
@@ -47,7 +47,7 @@ export default function Verdict() {
 
   return (
     <div className="page page--cta">
-      <AppBar title={drug.name} sub={`${zoneName(zone)} ${zone.crop} · ${pest.name}`} fallback="/drugs" />
+      <AppBar title={drug.name} sub={`${zoneName(zone)} ${zone.crop}에 ${pest.name}`} fallback="/drugs" />
 
       <div className="page__body verdict-page">
         <section className={`verdict-hero verdict-hero--${v.status}`} aria-labelledby="verdict-headline">
@@ -58,7 +58,10 @@ export default function Verdict() {
             <StatusBadge status={v.status} size="lg" />
           </div>
           <h2 id="verdict-headline" className="verdict-hero__headline">{meta.headline}</h2>
-          <p className="verdict-hero__reason">{v.reason}</p>
+          <p className="verdict-hero__reason">
+            {v.reasonTag && <ReasonTag>{v.reasonTag}</ReasonTag>}
+            {v.reason}
+          </p>
           {v.status === 'preplant' && (
             <Link to="/fields" className="verdict-hero__link">
               심은 날 입력하기
@@ -84,7 +87,7 @@ export default function Verdict() {
                 <dt>{f.label}</dt>
                 <dd>
                   <strong>{f.value}</strong>
-                  {f.sub && <span> · {f.sub}</span>}
+                  {f.sub && <span className="facts__sub">{f.sub}</span>}
                 </dd>
               </div>
             ))}
@@ -181,7 +184,10 @@ function CheckCell({ c }: { c: Check }) {
         <span className="check__label">{c.label}</span>
         <span className="check__state">{m ? m.check : '해당 없음'}</span>
       </span>
-      <span className="check__text">{c.text}</span>
+      <span className="check__text">
+        {c.tag && <ReasonTag>{c.tag}</ReasonTag>}
+        {c.text}
+      </span>
     </li>
   )
 }

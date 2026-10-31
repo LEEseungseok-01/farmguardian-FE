@@ -1,7 +1,6 @@
 import type { IconName } from '../components/iconPaths'
 import { DRUGS, drugById, type Drug, type Pest, type Registration, type SprayRecord, type Zone } from '../data/mock'
 import { addDays, diffDays, fmtMD, num } from './date'
-import { eul, gwa } from './korean'
 
 export type Status = 'ok' | 'caution' | 'no' | 'unknown' | 'preplant'
 export type CheckStatus = Status | 'skip'
@@ -24,7 +23,8 @@ export const worst = (list: Status[]): Status =>
   list.reduce<Status>((a, b) => (PRIORITY[b] > PRIORITY[a] ? b : a), 'ok')
 
 export type CheckKey = 'reg' | 'timing' | 'count' | 'group'
-export type Check = { key: CheckKey; label: string; status: CheckStatus; text: string }
+/** tag는 문장 앞에 칩으로 뜨는 짧은 상태말 */
+export type Check = { key: CheckKey; label: string; status: CheckStatus; text: string; tag?: string }
 export type Fact = { label: string; value: string; sub?: string }
 
 export type Verdict = {
@@ -32,6 +32,7 @@ export type Verdict = {
   status: Status
   checks: Check[]
   reason: string
+  reasonTag?: string
   facts: Fact[]
   reg?: Registration
 }
@@ -132,24 +133,19 @@ export function evaluate(drug: Drug, zone: Zone, pest: Pest, records: SprayRecor
   } else {
     const left = reg.maxCount - used
     countFact = { label: '최대 횟수', value: `${reg.maxCount}회 중 ${used}회 씀`, sub: left > 0 ? `${left}회 남음` : '남은 횟수 없음' }
+    const usedTag = used === 0 ? '아직 안 씀' : `${used}번 사용`
     if (left <= 0) {
-      count = {
-        key: 'count', label: '횟수', status: 'no',
-        text: `${eul(drug.ingredient)} 이미 ${used}번 썼어요. 이번 농사에는 더 쓸 수 없어요.`,
-      }
+      count = { key: 'count', label: '횟수', status: 'no', tag: usedTag, text: '더 쓸 수 없어요.' }
     } else if (left === 1) {
       count = {
         key: 'count', label: '횟수', status: 'caution',
-        text: used === 0
-          ? `이번 농사에 한 번만 쓸 수 있는 약이에요.`
-          : `${eul(drug.ingredient)} ${used}번 썼어요. 이번이 마지막 한 번이에요.`,
+        tag: used === 0 ? '한 번만 가능' : usedTag,
+        text: used === 0 ? '이번 농사에 한 번만 쓸 수 있어요.' : '마지막으로 쓸 수 있어요.',
       }
     } else {
       count = {
-        key: 'count', label: '횟수', status: 'ok',
-        text: used === 0
-          ? `아직 안 썼어요. 이번 농사에 ${reg.maxCount}번까지 쓸 수 있어요.`
-          : `${eul(drug.ingredient)} ${used}번 썼어요. ${reg.maxCount}번까지라 ${left}번 남았어요.`,
+        key: 'count', label: '횟수', status: 'ok', tag: usedTag,
+        text: used === 0 ? `이번 농사에 ${reg.maxCount}번까지 쓸 수 있어요.` : `${reg.maxCount}번까지라 ${left}번 남았어요.`,
       }
     }
   }
@@ -163,23 +159,24 @@ export function evaluate(drug: Drug, zone: Zone, pest: Pest, records: SprayRecor
   const everUsed = sameKind.some((rec) => drugById(rec.drugId)?.group === drug.group)
   let group: Check
   let groupSub: string
+  const victim = drug.kind === '살균제' ? '병균' : '벌레'
   if (lastDrug && lastDrug.group === drug.group && prevDrug && prevDrug.group === drug.group) {
     group = {
-      key: 'group', label: '계통', status: 'no',
-      text: `${drug.group}번 계통을 두 번 연달아 썼어요. 세 번 연속은 안 돼요.`,
+      key: 'group', label: '계통', status: 'no', tag: '두 번 연속',
+      text: '세 번째는 안 돼요. 다른 계통을 쓰세요.',
     }
     groupSub = '두 번 연속 사용'
   } else if (lastDrug && lastDrug.group === drug.group) {
     group = {
-      key: 'group', label: '계통', status: 'caution',
-      text: `직전에 뿌린 ${gwa(lastDrug.name)} 같은 ${drug.group}번 계통이에요. 다음에는 다른 계통을 써 주세요.`,
+      key: 'group', label: '계통', status: 'caution', tag: '직전과 같은 계통',
+      text: `${lastDrug.name} 다음이라 다른 계통을 써야 해요.`,
     }
     groupSub = '직전과 같음'
   } else if (everUsed) {
-    group = { key: 'group', label: '계통', status: 'ok', text: '직전에 뿌린 약과 다른 계통이에요.' }
+    group = { key: 'group', label: '계통', status: 'ok', tag: '직전과 다른 계통', text: `직전에 뿌린 약과 ${victim}을 잡는 방식이 달라요.` }
     groupSub = '직전과 다름'
   } else {
-    group = { key: 'group', label: '계통', status: 'ok', text: `${drug.group}번 계통은 이번 농사에 처음 써요.` }
+    group = { key: 'group', label: '계통', status: 'ok', tag: '이번 농사 첫 사용', text: '이 계통은 이번 농사에 아직 안 썼어요.' }
     groupSub = '이번 농사 첫 사용'
   }
 
@@ -196,6 +193,7 @@ export function evaluate(drug: Drug, zone: Zone, pest: Pest, records: SprayRecor
     checks,
     reg,
     reason: strongest ? strongest.text : '네 가지 모두 통과했어요.',
+    reasonTag: strongest?.tag,
     facts: [
       phiFact,
       countFact,

@@ -11,9 +11,18 @@ export function GroupChip({ group, warn }: { group: string; warn?: boolean }) {
       className={`group-chip${warn ? ' group-chip--warn' : ''}`}
       style={{ ['--gc' as string]: groupColor(group) }}
     >
-      계통 {group}번{warn ? ' · 직전과 같음' : ''}
+      계통 {group}번
     </span>
   )
+}
+
+/** 판정 문장 앞에 붙는 짧은 상태말 */
+export function ReasonTag({ children }: { children: string }) {
+  return <span className="reason-tag">{children}</span>
+}
+
+export function RepeatChip() {
+  return <span className="group-chip group-chip--warn group-chip--flat">직전과 같음</span>
 }
 
 export function DrugCard({ v, inStock }: { v: Verdict; inStock?: boolean }) {
@@ -28,7 +37,8 @@ export function DrugCard({ v, inStock }: { v: Verdict; inStock?: boolean }) {
           <StatusBadge status={v.status} />
         </span>
         <span className="drug-card__meta">
-          {d.form} · {d.ingredient}
+          <span>{d.form}</span>
+          <span>{d.ingredient}</span>
         </span>
         <span className="drug-card__tags">
           <GroupChip group={d.group} warn={sameGroup === 'caution' || sameGroup === 'no'} />
@@ -39,7 +49,10 @@ export function DrugCard({ v, inStock }: { v: Verdict; inStock?: boolean }) {
             </span>
           )}
         </span>
-        <span className={`drug-card__reason${v.status === 'ok' ? ' is-ok' : ''}`}>{v.reason}</span>
+        <span className={`drug-card__reason${v.status === 'ok' ? ' is-ok' : ''}`}>
+          {v.reasonTag && <ReasonTag>{v.reasonTag}</ReasonTag>}
+          {v.reason}
+        </span>
       </span>
     </Link>
   )
