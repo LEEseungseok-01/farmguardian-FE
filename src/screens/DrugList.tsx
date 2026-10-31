@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AppBar } from '../components/AppBar'
 import { BottomNav } from '../components/BottomNav'
@@ -5,7 +6,7 @@ import { DrugCard } from '../components/DrugCard'
 import { Icon } from '../components/Icon'
 import { PestPhoto } from '../components/PestBits'
 import { zoneName } from '../data/mock'
-import { LIST_ORDER, STATUS_META, evaluate, registeredDrugs, sortVerdicts } from '../lib/verdict'
+import { LIST_ORDER, STATUS_META, evaluate, registeredDrugs, sortVerdicts, type Status } from '../lib/verdict'
 import { useApp } from '../state/AppState'
 import './DrugList.css'
 import { EmptyArt } from '../components/EmptyArt'
@@ -19,6 +20,10 @@ export default function DrugList() {
   const groups = LIST_ORDER.map((s) => ({ status: s, items: verdicts.filter((v) => v.status === s) })).filter(
     (g) => g.items.length > 0,
   )
+  // 칩으로 한 묶음만 추려 본다. 고른 묶음이 사라지면(구역이나 병해충을 바꾸면) 저절로 전체로 돌아간다
+  const [picked, setPicked] = useState<Status | null>(null)
+  const pick = groups.some((g) => g.status === picked) ? picked : null
+  const shown = pick ? groups.filter((g) => g.status === pick) : groups
 
   return (
     <div className="page page--nav">
@@ -58,12 +63,19 @@ export default function DrugList() {
         )}
 
         {verdicts.length > 0 && (
-          <ul className="tally" aria-label="판정 결과 개수">
+          <ul className="tally" role="group" aria-label="판정으로 거르기">
             {groups.map((g) => (
-              <li key={g.status} className={`tally__item tally__item--${g.status}`}>
-                <Icon name={STATUS_META[g.status].icon} weight="fill" size={16} />
-                {STATUS_META[g.status].label}
-                <strong>{g.items.length}</strong>
+              <li key={g.status}>
+                <button
+                  type="button"
+                  className={`tally__item tally__item--${g.status}`}
+                  aria-pressed={pick === g.status}
+                  onClick={() => setPicked(pick === g.status ? null : g.status)}
+                >
+                  <Icon name={STATUS_META[g.status].icon} weight="fill" size={16} />
+                  {STATUS_META[g.status].label}
+                  <strong>{g.items.length}</strong>
+                </button>
               </li>
             ))}
           </ul>
@@ -82,7 +94,7 @@ export default function DrugList() {
             </p>
           </div>
         ) : (
-          groups.map((g) => (
+          shown.map((g) => (
             <section key={g.status} className="drug-group" aria-labelledby={`grp-${g.status}`}>
               <h2 id={`grp-${g.status}`} className={`drug-group__title drug-group__title--${g.status}`}>
                 <Icon name={STATUS_META[g.status].icon} weight="fill" size={20} />
@@ -98,6 +110,13 @@ export default function DrugList() {
               </ul>
             </section>
           ))
+        )}
+
+        {pick && (
+          <button type="button" className="btn btn--soft" onClick={() => setPicked(null)}>
+            <Icon name="arrow-counter-clockwise" size={20} />
+            약 {verdicts.length}개 모두 보기
+          </button>
         )}
       </div>
       <BottomNav />
