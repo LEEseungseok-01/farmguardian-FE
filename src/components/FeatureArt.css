@@ -1,0 +1,85 @@
+/* 한 칸에 한 가지만 천천히 움직인다 */
+.fart {
+  display: block;
+  flex: none;
+}
+
+.fart g[class^='fart__'] {
+  transform-box: fill-box;
+}
+
+/* 봉지 위를 빛줄기가 내려간다 */
+.fart__beam {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: fart-beam 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes fart-beam {
+  from { transform: translateY(-22px); opacity: 0.35; }
+  50% { opacity: 1; }
+  to { transform: translateY(22px); opacity: 0.35; }
+}
+
+/* 달력에서 날이 하나씩 지나고 수확할 날이 켜진다 */
+.fart__days path {
+  opacity: 0.3;
+  animation: fart-day 3s ease-in-out infinite;
+}
+
+.fart__days path:nth-child(2) { animation-delay: 0.3s; }
+.fart__days path:nth-child(3) { animation-delay: 0.6s; }
+
+.fart__day {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: fart-pop 3s ease-in-out infinite;
+}
+
+@keyframes fart-day {
+  0%, 100% { opacity: 0.25; }
+  40% { opacity: 1; }
+}
+
+@keyframes fart-pop {
+  0%, 60%, 100% { transform: scale(1); }
+  75% { transform: scale(1.22); }
+}
+
+/* 뿌린 횟수가 차오른다. 마지막 칸만 색이 다르다 */
+.fart__bars path {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: fart-grow 2.8s ease-in-out infinite;
+}
+
+.fart__bars path:nth-child(2) { animation-delay: 0.22s; }
+.fart__bars path:nth-child(3) { animation-delay: 0.44s; }
+
+@keyframes fart-grow {
+  0%, 100% { transform: scaleY(0.2); }
+  45%, 70% { transform: scaleY(1); }
+}
+
+/* 두 약을 번갈아 쓰라고 화살표가 오간다 */
+.fart__swap {
+  transform-origin: 50% 50%;
+  animation: fart-swap 2.6s ease-in-out infinite;
+}
+
+@keyframes fart-swap {
+  0%, 100% { transform: translateX(-7px); }
+  50% { transform: translateX(7px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fart__beam,
+  .fart__day,
+  .fart__swap,
+  .fart__days path,
+  .fart__bars path {
+    animation: none;
+  }
+  .fart__days path { opacity: 1; }
+  .fart__bars path { transform: none; }
+}

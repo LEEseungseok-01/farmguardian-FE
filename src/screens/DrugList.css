@@ -1,0 +1,144 @@
+.drug-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.zone-tabs {
+  display: flex;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  margin: 0 calc(var(--sp-4) * -1);
+  padding: 2px var(--sp-4);
+  scrollbar-width: none;
+  /* 오른쪽에 더 있다는 걸 끝을 흐리게 해서 알린다 */
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+}
+
+.zone-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.pest-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.pest-strip__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+}
+
+.pest-strip__label {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.pest-strip__name {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.pest-strip__change {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 0 var(--sp-2);
+  color: var(--accent-text);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+
+/* 한 줄에 다 들어가도록 있는 상태 수만큼 칸을 쪼갠다 */
+.tally {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 6px;
+}
+
+.tally > li {
+  min-width: 0;
+}
+
+.tally__item {
+  width: 100%;
+  border: 1.5px solid transparent;
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 6px;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* 켜진 칩은 테두리로 표시한다. 색은 이미 상태를 쓰고 있어서 더 쓸 수 없다 */
+.tally__item[aria-pressed='true'] {
+  border-color: currentColor;
+}
+
+.tally__item strong {
+  font-variant-numeric: tabular-nums;
+  margin-left: 2px;
+}
+
+.tally__item--ok { background: var(--ok-bg); color: var(--ok-fg); }
+.tally__item--caution { background: var(--caution-bg); color: var(--caution-fg); }
+.tally__item--no { background: var(--no-bg); color: var(--no-fg); }
+.tally__item--unknown { background: var(--unknown-bg); color: var(--unknown-fg); }
+.tally__item--preplant { background: var(--preplant-bg); color: var(--preplant-fg); }
+
+.drug-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.drug-group__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  padding-top: var(--sp-2);
+}
+
+.drug-group__title span {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+.drug-group__title--ok .icon { color: var(--ok-fg); }
+.drug-group__title--caution .icon { color: var(--caution-fg); }
+.drug-group__title--no .icon { color: var(--no-fg); }
+.drug-group__title--unknown .icon { color: var(--unknown-fg); }
+.drug-group__title--preplant .icon { color: var(--preplant-fg); }
+
+.drug-group__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}

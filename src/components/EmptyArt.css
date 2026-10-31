@@ -1,0 +1,125 @@
+/* 캐릭터가 하는 일을 동작으로 보인다. 느리게, 한 가지만 움직인다 */
+.art {
+  display: block;
+  flex: none;
+}
+
+.art g[class^='art__'] {
+  transform-box: fill-box;
+}
+
+/* 장부에 적기 — 연필을 쥔 손이 줄을 긋고, 그은 줄이 남는다 */
+.art__hand {
+  transform-origin: 20% 60%;
+  animation: art-write 2.6s ease-in-out infinite;
+}
+
+.art__line path {
+  opacity: 0;
+  animation: art-ink 2.6s ease-in-out infinite;
+}
+
+.art__line path:nth-child(2) {
+  animation-delay: 0.35s;
+}
+
+.art__line path:nth-child(3) {
+  animation-delay: 0.7s;
+}
+
+@keyframes art-write {
+  0%, 100% { transform: translate(0, 0); }
+  35% { transform: translate(-7px, 4px); }
+  70% { transform: translate(-3px, 1px); }
+}
+
+@keyframes art-ink {
+  0%, 20% { opacity: 0; }
+  45%, 85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 돋보기 — 잎 위를 천천히 훑는다 */
+.art__lens {
+  transform-origin: 50% 50%;
+  animation: art-scan 3.2s ease-in-out infinite;
+}
+
+@keyframes art-scan {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-22px, 14px); }
+}
+
+/* 빈 봉지 — 털어도 먼지만 떨어진다 */
+.art__pouch {
+  transform-origin: 50% 8%;
+  animation: art-shake 1.8s ease-in-out infinite;
+}
+
+.art__dust path {
+  opacity: 0;
+  animation: art-fall 1.8s ease-in infinite;
+}
+
+.art__dust path:nth-child(2) {
+  animation-delay: 0.45s;
+}
+
+@keyframes art-shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(7deg); }
+  75% { transform: rotate(-7deg); }
+}
+
+@keyframes art-fall {
+  0%, 30% { opacity: 0; transform: translateY(-6px); }
+  55% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(8px); }
+}
+
+/* 빈 막대 — 쌓일 자리가 차례로 깜빡인다 */
+.art__slot path {
+  opacity: 0.35;
+  animation: art-blink 2.4s ease-in-out infinite;
+}
+
+.art__slot path:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.art__slot path:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes art-blink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* 줄자 — 당겼다 놓는다. 로딩에 쓴다 */
+.art__tape {
+  transform-origin: 0% 50%;
+  animation: art-pull 1.6s ease-in-out infinite;
+}
+
+@keyframes art-pull {
+  0%, 100% { transform: scaleX(0.55); }
+  50% { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .art__hand,
+  .art__lens,
+  .art__pouch,
+  .art__tape,
+  .art__line path,
+  .art__dust path,
+  .art__slot path {
+    animation: none;
+  }
+
+  .art__line path,
+  .art__dust path {
+    opacity: 1;
+  }
+}
