@@ -4,6 +4,7 @@ import { BottomNav } from '../components/BottomNav'
 import { DrugCard } from '../components/DrugCard'
 import { Icon } from '../components/Icon'
 import { REGION_STATS, drugById, zoneName } from '../data/mock'
+import { num } from '../lib/date'
 import { eul, iga } from '../lib/korean'
 import { evaluate, groupColor, registeredDrugs, seasonRecords } from '../lib/verdict'
 import { useApp } from '../state/AppState'
@@ -50,6 +51,11 @@ export default function Dashboard() {
   const mine = REGION_STATS.find((r) => r.name === currentFarm.region)
   const [regionTop, regionShare] = mine ? mine.shares.reduce((a, b) => (b[1] > a[1] ? b : a)) : ['', 0]
   const overlap = rows.find((r) => r.group === regionTop)
+  const regionRows = REGION_STATS.map((r) => {
+    const [g, share] = r.shares.reduce((a, b) => (b[1] > a[1] ? b : a))
+    return { r, g, share }
+  }).sort((a, b) => b.share - a.share)
+  const regionFarms = REGION_STATS.reduce((a, r) => a + r.farms, 0)
 
   return (
     <div className="page page--nav">
@@ -164,33 +170,33 @@ export default function Dashboard() {
               <span>{county} {zone.crop}, 최근 30일</span>
               <Icon name="caret-down" size={18} />
             </summary>
+            <p className="nbr__why">
+              벌레는 밭 경계를 안 지켜요. 옆 밭에서 많이 쓴 계통은 벌레가 이미 겪어 봐서, 내 밭에서 처음 써도 덜 들을 수 있어요.
+            </p>
             <p className="nbr__flag">
               <Icon name={overlap ? 'warning' : 'check-circle'} weight="fill" size={18} />
               {currentFarm.region} 농가 {Math.round(regionShare * 100)}%가 {regionTop}번 계통을 써요
               {overlap ? `. 올해 쓴 ${overlap.names[0]}도 ${regionTop}번이에요` : ''}
             </p>
             <ul className="region-list">
-              {REGION_STATS.map((r) => {
-                const [g, share] = r.shares.reduce((a, b) => (b[1] > a[1] ? b : a))
-                return (
-                  <li key={r.name} className={`region-row${r.name === currentFarm.region ? ' is-mine' : ''}`}>
-                    <span className="region-row__name">
-                      {r.name}
-                      {r.name === currentFarm.region && <em>내 밭</em>}
-                    </span>
-                    <span className="region-row__bar" aria-hidden="true">
-                      {r.shares.map(([sg, sv]) => (
-                        <span key={sg} style={{ flexGrow: sv, background: groupColor(sg) }} />
-                      ))}
-                    </span>
-                    <span className="region-row__top">
-                      {g}번 {Math.round(share * 100)}%
-                    </span>
-                  </li>
-                )
-              })}
+              {regionRows.map(({ r, g, share }) => (
+                <li key={r.name} className={`region-row${r.name === currentFarm.region ? ' is-mine' : ''}`}>
+                  <span className="region-row__name">
+                    {r.name}
+                    {r.name === currentFarm.region && <em>내 밭</em>}
+                  </span>
+                  <span className="region-row__bar" aria-hidden="true">
+                    <span style={{ width: `${share * 100}%`, background: groupColor(g) }} />
+                  </span>
+                  <span className="region-row__top">
+                    {g}번 {Math.round(share * 100)}%
+                  </span>
+                </li>
+              ))}
             </ul>
-            <p className="fine">막대는 그 면에서 쓰인 계통 비중이에요. 농가 이름은 공개되지 않아요.</p>
+            <p className="fine">
+              막대가 길수록 그 면이 한 계통에 몰려 있어요. {county} {zone.crop} 농가 {num(regionFarms)}곳 기록이고, 농가 이름은 공개되지 않아요.
+            </p>
           </details>
         )}
 

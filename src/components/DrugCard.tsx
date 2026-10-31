@@ -49,10 +49,12 @@ export function DrugCard({ v, inStock }: { v: Verdict; inStock?: boolean }) {
             </span>
           )}
         </span>
-        <span className={`drug-card__reason${v.status === 'ok' ? ' is-ok' : ''}`}>
-          {v.reasonTag && <ReasonTag>{v.reasonTag}</ReasonTag>}
-          {v.reason}
-        </span>
+        {v.status !== 'ok' && (
+          <span className="drug-card__reason">
+            {v.reasonTag && <ReasonTag>{v.reasonTag}</ReasonTag>}
+            {v.reason}
+          </span>
+        )}
       </span>
     </Link>
   )

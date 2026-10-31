@@ -1361,17 +1361,8 @@ select.input {
   padding-top: var(--sp-2);
   border-top: 1px solid var(--line);
   font-size: var(--fs-sm);
-  color: var(--text);
-}
-
-.drug-card__reason.is-ok {
   color: var(--text-2);
 }
-
-.drug-card--no .drug-card__reason { color: var(--no-fg); }
-.drug-card--caution .drug-card__reason { color: var(--caution-fg); }
-.drug-card--unknown .drug-card__reason { color: var(--unknown-fg); }
-.drug-card--preplant .drug-card__reason { color: var(--preplant-fg); }
 
 /* 지도 공통 */
 .field-map {
@@ -1508,6 +1499,17 @@ select.input {
 .empty .art {
   margin-bottom: calc(var(--sp-1) * -1);
 }
+
+/* 상태 색은 칩만 쓴다. 문장까지 물들이면 어디를 봐야 할지 흐려진다 */
+.check--caution .reason-tag,
+.drug-card--caution .reason-tag { color: var(--caution-fg); }
+.check--no .reason-tag,
+.drug-card--no .reason-tag { color: var(--no-fg); }
+.check--unknown .reason-tag,
+.drug-card--unknown .reason-tag { color: var(--unknown-fg); }
+.check--preplant .reason-tag,
+.drug-card--preplant .reason-tag { color: var(--preplant-fg); }
+.check--ok .reason-tag { color: var(--ok-fg); }
 
 /* 판정 문장 앞에 붙는 상태말. 문장이 길어지지 않게 한 덩어리로 묶는다 */
 .reason-tag {

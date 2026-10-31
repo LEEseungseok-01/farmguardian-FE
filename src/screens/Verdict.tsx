@@ -58,10 +58,12 @@ export default function Verdict() {
             <StatusBadge status={v.status} size="lg" />
           </div>
           <h2 id="verdict-headline" className="verdict-hero__headline">{meta.headline}</h2>
-          <p className="verdict-hero__reason">
-            {v.reasonTag && <ReasonTag>{v.reasonTag}</ReasonTag>}
-            {v.reason}
-          </p>
+          {v.status !== 'ok' && (
+            <p className="verdict-hero__reason">
+              {v.reasonTag && <ReasonTag>{v.reasonTag}</ReasonTag>}
+              {v.reason}
+            </p>
+          )}
           {v.status === 'preplant' && (
             <Link to="/fields" className="verdict-hero__link">
               심은 날 입력하기

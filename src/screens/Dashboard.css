@@ -282,9 +282,9 @@
   font-weight: 800;
 }
 
+/* 막대 하나. 길이는 그 면 1등 계통의 비중이다 */
 .region-row__bar {
-  display: flex;
-  gap: 2px;
+  display: block;
   height: 8px;
   border-radius: var(--r-pill);
   overflow: hidden;
@@ -292,7 +292,17 @@
 }
 
 .region-row__bar span {
-  flex-basis: 0;
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.nbr__why {
+  margin: 0;
+  padding: 0 var(--sp-4) var(--sp-3);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--text-2);
 }
 
 .region-row__top {

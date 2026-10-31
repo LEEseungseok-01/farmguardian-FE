@@ -61,7 +61,7 @@ export default function DrugList() {
           <ul className="tally" aria-label="판정 결과 개수">
             {groups.map((g) => (
               <li key={g.status} className={`tally__item tally__item--${g.status}`}>
-                <Icon name={STATUS_META[g.status].icon} weight="fill" size={18} />
+                <Icon name={STATUS_META[g.status].icon} weight="fill" size={16} />
                 {STATUS_META[g.status].label}
                 <strong>{g.items.length}</strong>
               </li>

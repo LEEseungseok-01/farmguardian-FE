@@ -1,6 +1,7 @@
 import type { IconName } from '../components/iconPaths'
 import { DRUGS, drugById, type Drug, type Pest, type Registration, type SprayRecord, type Zone } from '../data/mock'
 import { addDays, diffDays, fmtMD, num } from './date'
+import { gwa } from './korean'
 
 export type Status = 'ok' | 'caution' | 'no' | 'unknown' | 'preplant'
 export type CheckStatus = Status | 'skip'
@@ -61,7 +62,7 @@ export function evaluate(drug: Drug, zone: Zone, pest: Pest, records: SprayRecor
   // 1 등록
   let regCheck: Check
   if (drug.regs.length === 0) {
-    regCheck = { key: 'reg', label: '등록', status: 'unknown', text: '등록 자료를 찾을 수 없어요.' }
+    regCheck = { key: 'reg', label: '등록', status: 'unknown', tag: '자료 없음', text: '이 약이 어디에 등록됐는지 못 찾았어요.' }
   } else if (!reg) {
     regCheck = { key: 'reg', label: '등록', status: 'no', text: `${target}에는 등록되지 않은 약이에요.` }
   } else {
@@ -94,14 +95,16 @@ export function evaluate(drug: Drug, zone: Zone, pest: Pest, records: SprayRecor
   let phiFact: Fact
   const phiText = reg.phi == null ? '자료 없음' : `${reg.phi}일`
   if (!planted) {
-    const when = zone.plannedAt ? `${fmtMD(zone.plannedAt)}에 심을 예정이에요.` : '심은 날이 아직 없어요.'
-    timing = { key: 'timing', label: '시기', status: 'preplant', text: `아직 심기 전이에요. ${when}` }
+    const when = zone.plannedAt
+      ? `${fmtMD(zone.plannedAt)}에 심을 예정이라 아직 따질 수 없어요.`
+      : '심은 날을 넣으면 따져 드려요.'
+    timing = { key: 'timing', label: '시기', status: 'preplant', tag: '심기 전', text: when }
     phiFact = { label: '수확 전 일수', value: phiText, sub: '심은 뒤 계산' }
   } else if (reg.phi == null) {
-    timing = { key: 'timing', label: '시기', status: 'unknown', text: '수확 전 일수 자료가 없어요.' }
+    timing = { key: 'timing', label: '시기', status: 'unknown', tag: '자료 없음', text: '수확 며칠 전까지 쓸 수 있는지 안 나와 있어요.' }
     phiFact = { label: '수확 전 일수', value: '자료 없음' }
   } else if (!zone.harvestAt) {
-    timing = { key: 'timing', label: '시기', status: 'unknown', text: '수확 예정일이 없어 따질 수 없어요.' }
+    timing = { key: 'timing', label: '시기', status: 'unknown', tag: '수확일 모름', text: '수확 예정일을 넣으면 따져 드려요.' }
     phiFact = { label: '수확 전 일수', value: phiText, sub: '수확일 모름' }
   } else {
     const left = diffDays(zone.harvestAt, today)
@@ -110,16 +113,19 @@ export function evaluate(drug: Drug, zone: Zone, pest: Pest, records: SprayRecor
     phiFact = { label: '수확 전 일수', value: phiText, sub: `남은 ${left}일` }
     if (margin < 0) {
       timing = {
-        key: 'timing', label: '시기', status: 'no',
-        text: `수확까지 ${left}일 남았는데, 이 약은 수확 ${reg.phi}일 전까지만 뿌릴 수 있어요.`,
+        key: 'timing', label: '시기', status: 'no', tag: `수확 ${reg.phi}일 전까지`,
+        text: `수확이 ${left}일 남아 지금 뿌리면 늦어요.`,
       }
     } else if (margin <= 2) {
       timing = {
-        key: 'timing', label: '시기', status: 'caution',
-        text: `오늘 뿌리면 ${canHarvest}부터 수확할 수 있어요. 예정일까지 여유가 ${margin}일뿐이에요.`,
+        key: 'timing', label: '시기', status: 'caution', tag: `여유 ${margin}일`,
+        text: `오늘 뿌리면 ${canHarvest}부터 수확할 수 있어요.`,
       }
     } else {
-      timing = { key: 'timing', label: '시기', status: 'ok', text: `오늘 뿌리면 ${canHarvest}부터 수확할 수 있어요.` }
+      timing = {
+        key: 'timing', label: '시기', status: 'ok', tag: `여유 ${margin}일`,
+        text: `오늘 뿌리면 ${canHarvest}부터 수확할 수 있어요.`,
+      }
     }
   }
 
@@ -128,7 +134,7 @@ export function evaluate(drug: Drug, zone: Zone, pest: Pest, records: SprayRecor
   let count: Check
   let countFact: Fact
   if (reg.maxCount == null) {
-    count = { key: 'count', label: '횟수', status: 'unknown', text: '최대 살포 횟수 자료가 없어요.' }
+    count = { key: 'count', label: '횟수', status: 'unknown', tag: '자료 없음', text: '몇 번까지 쓸 수 있는지 안 나와 있어요.' }
     countFact = { label: '최대 횟수', value: '자료 없음', sub: `${used}회 씀` }
   } else {
     const left = reg.maxCount - used
@@ -163,13 +169,16 @@ export function evaluate(drug: Drug, zone: Zone, pest: Pest, records: SprayRecor
   if (lastDrug && lastDrug.group === drug.group && prevDrug && prevDrug.group === drug.group) {
     group = {
       key: 'group', label: '계통', status: 'no', tag: '두 번 연속',
-      text: '세 번째는 안 돼요. 다른 계통을 쓰세요.',
+      text: `${victim}한테는 같은 약을 세 번 쓰는 셈이에요.`,
     }
     groupSub = '두 번 연속 사용'
   } else if (lastDrug && lastDrug.group === drug.group) {
     group = {
-      key: 'group', label: '계통', status: 'caution', tag: '직전과 같은 계통',
-      text: `${lastDrug.name} 다음이라 다른 계통을 써야 해요.`,
+      key: 'group', label: '계통', status: 'caution',
+      tag: lastDrug.id === drug.id ? '직전과 같은 약' : '직전과 같은 계통',
+      text: lastDrug.id === drug.id
+        ? '바로 저번에 뿌린 약이에요. 다른 계통으로 바꾸세요.'
+        : `${victim}한테는 저번에 쓴 ${gwa(lastDrug.name)} 같은 약이에요.`,
     }
     groupSub = '직전과 같음'
   } else if (everUsed) {
