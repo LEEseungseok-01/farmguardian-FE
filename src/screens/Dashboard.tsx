@@ -4,8 +4,7 @@ import { BottomNav } from '../components/BottomNav'
 import { DrugCard } from '../components/DrugCard'
 import { Icon } from '../components/Icon'
 import { REGION_STATS, drugById, zoneName } from '../data/mock'
-import { fmtMD } from '../lib/date'
-import { eul } from '../lib/korean'
+import { eul, iga } from '../lib/korean'
 import { evaluate, groupColor, registeredDrugs, seasonRecords } from '../lib/verdict'
 import { useApp } from '../state/AppState'
 import './Dashboard.css'
@@ -54,7 +53,7 @@ export default function Dashboard() {
 
   return (
     <div className="page page--nav">
-      <AppBar title="통계" sub={`${currentFarm.name} · ${fmtMD(today)} 기준`} />
+      <AppBar title="통계" sub={currentFarm.name} />
 
       <div className="page__body dash-page">
         <div className="zone-tabs" role="group" aria-label="구역 고르기">
@@ -133,7 +132,7 @@ export default function Dashboard() {
             <>
               <p className="lede">
                 {last
-                  ? `직전에 ${eul(last.name)} 썼어요. ${last.group}번 계통이라 다른 계통을 먼저 보여 드려요.`
+                  ? `직전에 쓴 ${iga(last.name)} ${last.group}번 계통이라 다른 계통을 먼저 보여 드려요`
                   : `${pest?.name}에 쓸 수 있는 약이에요.`}
               </p>
               <ul className="drug-group__list">

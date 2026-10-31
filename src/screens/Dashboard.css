@@ -254,7 +254,7 @@
 
 .region-row {
   display: grid;
-  grid-template-columns: 82px 1fr 60px;
+  grid-template-columns: 104px 1fr auto;
   align-items: center;
   gap: var(--sp-3);
 }
@@ -263,6 +263,7 @@
   display: flex;
   align-items: baseline;
   gap: 4px;
+  white-space: nowrap;
   font-size: var(--fs-sm);
   font-weight: 600;
 }
@@ -295,6 +296,7 @@
 }
 
 .region-row__top {
+  white-space: nowrap;
   text-align: right;
   font-size: var(--fs-xs);
   color: var(--text-2);

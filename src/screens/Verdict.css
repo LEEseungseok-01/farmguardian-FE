@@ -150,7 +150,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-.facts dd span {
+.facts dd .facts__sub {
+  margin-left: var(--sp-3);
   color: var(--text-2);
 }
 

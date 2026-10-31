@@ -38,6 +38,7 @@
   padding: 0;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: 1fr;
   gap: var(--sp-2);
 }
 
@@ -370,6 +371,9 @@
 }
 
 .why__src {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--sp-4);
   font-size: var(--fs-xs);
   color: var(--text-3);
 }

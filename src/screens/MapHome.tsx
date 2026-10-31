@@ -7,7 +7,7 @@ import { LogoMark } from '../components/Logo'
 import { ProductArt } from '../components/ProductArt'
 import { StatusBadge } from '../components/StatusBadge'
 import { WEATHER, zoneName, type Zone } from '../data/mock'
-import { diffDays, fmtMD, num, toPyeong } from '../lib/date'
+import { diffDays, fmtMDnum, num, toPyeong } from '../lib/date'
 import { LIST_ORDER, evaluate, registeredDrugs, seasonRecords } from '../lib/verdict'
 import { useApp } from '../state/AppState'
 import './MapHome.css'
@@ -18,7 +18,7 @@ export default function MapHome() {
   const navigate = useNavigate()
   const { currentFarm, farmZones, zone, selectZone, records, inventory, today, pestOf } = useApp()
   const pest = pestOf(zone)
-  const [sheet, setSheet] = useState<SheetState>(() => (window.innerHeight >= 700 ? 'open' : 'min'))
+  const [sheet, setSheet] = useState<SheetState>('min')
   const topRef = useRef<HTMLDivElement>(null)
   const sheetRef = useRef<HTMLElement>(null)
   const [inset, setInset] = useState({ top: 180, bottom: 440 })
@@ -41,7 +41,6 @@ export default function MapHome() {
     }
   }, [])
 
-  const crops = [...new Set(farmZones.map((z) => z.crop))].join('·')
   const area = farmZones.reduce((a, z) => a + z.areaM2, 0)
 
   const zoneTag = (z: Zone) => {
@@ -75,11 +74,12 @@ export default function MapHome() {
                 <Icon name="caret-down" size={18} />
               </span>
               <span className="farm-card__meta">
-                {num(toPyeong(area))}평 · 구역 {farmZones.length}개
+                <span>{num(toPyeong(area))}평</span>
+                <span>구역 {farmZones.length}개</span>
               </span>
             </span>
           </Link>
-          <Link to="/fields" className="icon-btn icon-btn--glass" aria-label="밭·구역 관리">
+          <Link to="/fields" className="icon-btn icon-btn--glass" aria-label="밭과 구역 관리">
             <Icon name="sliders-horizontal" size={24} />
           </Link>
         </div>
@@ -209,17 +209,20 @@ function ZoneSheet({ ref, state, onToggle, onSet, zone, today, recordCount, card
         </div>
         <ul className="zone-stats">
           <li>
-            {planted ? '심은 지 ' : '심을 날 '}
+            심은 날{' '}
             <strong>
-              {planted
-                ? `${diffDays(today, zone.plantedAt!)}일`
-                : zone.plannedAt
-                  ? fmtMD(zone.plannedAt)
-                  : '미정'}
+              {planted ? fmtMDnum(zone.plantedAt!) : zone.plannedAt ? fmtMDnum(zone.plannedAt) : '미정'}
             </strong>
+            {planted ? (
+              <em>{diffDays(today, zone.plantedAt!)}일째</em>
+            ) : (
+              zone.plannedAt && <em>심기 전</em>
+            )}
           </li>
           <li>
-            수확까지 <strong>{zone.harvestAt ? `${diffDays(zone.harvestAt, today)}일` : '미정'}</strong>
+            수확{' '}
+            <strong>{zone.harvestAt ? fmtMDnum(zone.harvestAt) : '미정'}</strong>
+            {zone.harvestAt && <em>{diffDays(zone.harvestAt, today)}일 뒤</em>}
           </li>
         </ul>
       </div>

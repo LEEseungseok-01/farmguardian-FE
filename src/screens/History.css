@@ -84,6 +84,9 @@
 }
 
 .rec__meta {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--sp-4);
   font-size: var(--fs-sm);
   color: var(--text-2);
 }
@@ -96,6 +99,13 @@
 
 .rec__tags:empty {
   display: none;
+}
+
+.rec__btn--icon {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  color: var(--text-2);
 }
 
 .rec__btn {
@@ -160,6 +170,9 @@
 }
 
 .confirm-box__title {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--sp-4);
   font-weight: 700;
   font-size: var(--fs-lg);
 }

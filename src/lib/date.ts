@@ -15,6 +15,9 @@ export const fmtFull = (s: string) => `${s.slice(0, 4)}년 ${fmtMD(s)}`
 
 export const fmtDots = (s: string) => s.split('-').join('.')
 
+/** 연도 없는 숫자 날짜. 2026-06-10 → 06.10 */
+export const fmtMDnum = (s: string) => `${s.slice(5, 7)}.${s.slice(8, 10)}`
+
 export const weekday = (s: string) => '일월화수목금토'[new Date(toDayNumber(s) * DAY).getUTCDay()]
 
 export const monthOf = (s: string) => +s.slice(5, 7)

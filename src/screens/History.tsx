@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { AppBar } from '../components/AppBar'
 import { BottomNav } from '../components/BottomNav'
-import { GroupChip } from '../components/DrugCard'
+import { GroupChip, RepeatChip } from '../components/DrugCard'
 import { Icon } from '../components/Icon'
 import { ProductArt } from '../components/ProductArt'
 import { Sheet } from '../components/Sheet'
@@ -102,10 +102,12 @@ export default function History() {
                           <span className="rec__strike">{d.name}</span>
                         </p>
                         <p className="rec__meta rec__strike">
-                          {zoneName(z)} · {p?.name}
+                          <span>{zoneName(z)}</span>
+                          <span>{p?.name}</span>
                         </p>
                         <p className="rec__tags">
                           <GroupChip group={d.group} warn={!r.cancelled && repeatsGroup(r)} />
+                          {!r.cancelled && repeatsGroup(r) && <RepeatChip />}
                           {r.cancelled && <span className="tag tag--cancel">취소됨</span>}
                           {r.manual && <span className="tag">직접 적음</span>}
                         </p>
@@ -113,13 +115,14 @@ export default function History() {
                       {r.cancelled ? (
                         <button
                           type="button"
-                          className="rec__btn"
+                          className="rec__btn rec__btn--icon"
+                          aria-label={`${d.name} 기록 되돌리기`}
                           onClick={() => {
                             setRecordCancelled(r.id, false)
                             showToast({ text: '기록을 되돌렸어요' })
                           }}
                         >
-                          되돌리기
+                          <Icon name="arrow-counter-clockwise" size={22} />
                         </button>
                       ) : (
                         <button type="button" className="rec__btn rec__btn--danger" onClick={() => setConfirm(r)}>
@@ -168,7 +171,8 @@ export default function History() {
         {confirm && (
           <div className="confirm-box">
             <p className="confirm-box__title">
-              {fmtMD(confirm.date)} · {zoneName(zoneOf(confirm.zoneId))}
+              <span>{fmtMD(confirm.date)}</span>
+              <span>{zoneName(zoneOf(confirm.zoneId))}</span>
             </p>
             <p>
               {drugById(confirm.drugId)?.name}, {pestById(confirm.pestId)?.name}

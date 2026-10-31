@@ -82,6 +82,8 @@
 }
 
 .farm-card__meta {
+  display: flex;
+  column-gap: var(--sp-3);
   font-size: var(--fs-xs);
   color: var(--text-2);
   white-space: nowrap;
@@ -240,20 +242,22 @@
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  column-gap: var(--sp-2);
+  column-gap: var(--sp-5);
   font-size: var(--fs-sm);
   color: var(--text-2);
-}
-
-.zone-stats li + li::before {
-  content: '·';
-  margin-right: var(--sp-2);
-  color: var(--text-3);
 }
 
 .zone-stats strong {
   color: var(--text);
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.zone-stats em {
+  margin-left: 5px;
+  font-style: normal;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
   font-variant-numeric: tabular-nums;
 }
 

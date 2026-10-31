@@ -7,6 +7,7 @@ export function josa(word: string, withBatchim: string, withoutBatchim: string) 
 
 export const eul = (w: string) => josa(w, '을', '를')
 export const gwa = (w: string) => josa(w, '과', '와')
+export const iga = (w: string) => josa(w, '이', '가')
 
 /** 으로/로. ㄹ 받침 뒤에는 '로' */
 export function ro(word: string) {

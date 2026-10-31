@@ -59,7 +59,7 @@ const CHECK_ICON: Record<CheckStatus, IconName> = {
 // 146,507건은 농촌진흥청 PSIS 농약검색 총 건수(2026-10-31 조회).
 // 0.01ppm은 PLS 일률기준. 59.2%는 KREI R867 원문 수치 그대로.
 const FACTS: { label: string; value: string; note: string }[] = [
-  { label: '지켜야 할 안전사용기준', value: '146,507건', note: '약·작물·병해충마다 다 달라요' },
+  { label: '지켜야 할 안전사용기준', value: '146,507건', note: '약마다 작물마다 다 달라요' },
   { label: '내 작물에 사용하면 안 되는 약', value: '0.01ppm', note: '이만큼만 나와도 못 팔아요' },
   { label: '기준이 있다는 걸 아는 농업인', value: '59.2%', note: '열에 넷은 몰라요' },
 ]
@@ -199,7 +199,10 @@ export default function Login() {
             </li>
           ))}
         </ul>
-        <p className="why__src">농촌진흥청 PSIS(2026.10) · 한국농촌경제연구원 R867(2019)</p>
+        <p className="why__src">
+          <span>농촌진흥청 PSIS(2026.10)</span>
+          <span>한국농촌경제연구원 R867(2019)</span>
+        </p>
       </section>
 
       <section className="login__features" aria-labelledby="features-title">
