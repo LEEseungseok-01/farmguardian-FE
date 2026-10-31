@@ -30,7 +30,12 @@ type AppState = {
   changeCrop: (id: string, crop: Crop) => void
   /** 구역과 그 구역 기록을 지운다 (되돌릴 수 없음) */
   deleteZone: (id: string) => void
-  addFarm: (input: { name: string; address: string; region: string; areaM2: number; zones: { name: string; crop: Crop }[] }) => string
+  addFarm: (input: {
+    name: string
+    address: string
+    region: string
+    zones: { name: string; crop: Crop; areaM2: number; points: Point[] }[]
+  }) => string
   toast: Toast | null
   showToast: (t: Omit<Toast, 'id'>) => void
 }
@@ -38,20 +43,6 @@ type AppState = {
 const Ctx = createContext<AppState | null>(null)
 
 const firstPestFor = (crop: Crop) => PESTS.find((p) => p.crops.includes(crop) && p.kind !== '바이러스')
-
-/** 새 밭은 사각형 하나를 구역 수만큼 세로로 나눠 그린다 */
-function splitParcel(n: number): Point[][] {
-  const [a, b, c, d]: Point[] = [[70, 190], [320, 172], [334, 380], [82, 398]]
-  const lerp = (p: Point, q: Point, t: number): Point => [
-    Math.round(p[0] + (q[0] - p[0]) * t),
-    Math.round(p[1] + (q[1] - p[1]) * t),
-  ]
-  return Array.from({ length: n }, (_, i) => {
-    const t0 = i / n
-    const t1 = (i + 1) / n
-    return [lerp(a, b, t0), lerp(a, b, t1), lerp(d, c, t1), lerp(d, c, t0)]
-  })
-}
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [farms, setFarms] = useState(FARMS)
@@ -116,9 +107,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setZones((list) => list.filter((z) => z.id !== id))
         setRecords((list) => list.filter((r) => r.zoneId !== id))
       },
-      addFarm: ({ name, address, region, areaM2, zones: newZones }) => {
+      addFarm: ({ name, address, region, zones: newZones }) => {
         const id = `f${Date.now()}`
-        const shapes = splitParcel(newZones.length)
         const made: Zone[] = newZones.map((z, i) => ({
           id: `${id}-${i}`,
           farmId: id,
@@ -126,8 +116,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           crop: z.crop,
           plantedAt: null,
           harvestAt: null,
-          areaM2: Math.round(areaM2 / newZones.length),
-          points: shapes[i],
+          areaM2: z.areaM2,
+          points: z.points,
         }))
         setFarms((list) => [...list, { id, name, address, region }])
         setZones((list) => [...list, ...made])

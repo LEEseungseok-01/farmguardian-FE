@@ -8,6 +8,7 @@ import { Icon } from '../components/Icon'
 import { Sheet } from '../components/Sheet'
 import { ADDRESS_BOOK, type Crop, type Zone } from '../data/mock'
 import { diffDays, num, toPyeong } from '../lib/date'
+import { evenSplit, splitParcel, type Split } from '../lib/parcel'
 import { eul, josa, ro } from '../lib/korean'
 import { useApp } from '../state/AppState'
 import './Fields.css'
@@ -231,29 +232,19 @@ export default function Fields() {
 
 type Draft = { key: number; name: string; crop: Crop | null }
 
-const PARCEL: [number, number][] = [[70, 190], [320, 172], [334, 380], [82, 398]]
-
-/** 미리 보기용: 사각형을 구역 수만큼 세로로 나눈다 */
-function draftZones(drafts: Draft[], areaM2: number): Zone[] {
-  const [a, b, c, d] = PARCEL
-  const at = (p: [number, number], q: [number, number], t: number): [number, number] => [
-    Math.round(p[0] + (q[0] - p[0]) * t),
-    Math.round(p[1] + (q[1] - p[1]) * t),
-  ]
-  return drafts.map((z, i) => {
-    const t0 = i / drafts.length
-    const t1 = (i + 1) / drafts.length
-    return {
-      id: `draft-${z.key}`,
-      farmId: 'draft',
-      name: z.name.trim() || `구역 ${i + 1}`,
-      crop: z.crop ?? '배추',
-      plantedAt: null,
-      harvestAt: null,
-      areaM2: Math.round(areaM2 / drafts.length),
-      points: [at(a, b, t0), at(a, b, t1), at(d, c, t1), at(d, c, t0)],
-    }
-  })
+/** 미리 보기용: 밭을 구역 수만큼 격자로 자른다 */
+function draftZones(drafts: Draft[], areaM2: number, split?: Split): Zone[] {
+  const cells = splitParcel(drafts.length, split)
+  return drafts.map((z, i) => ({
+    id: `draft-${z.key}`,
+    farmId: 'draft',
+    name: z.name.trim() || `구역 ${i + 1}`,
+    crop: z.crop ?? '배추',
+    plantedAt: null,
+    harvestAt: null,
+    areaM2: Math.round(areaM2 * cells[i].ratio),
+    points: cells[i].points,
+  }))
 }
 
 const MAX_ZONES = 6
@@ -266,7 +257,12 @@ function FindFarmSheet({ onClose }: { onClose: () => void }) {
   const [picked, setPicked] = useState<(typeof ADDRESS_BOOK)[number] | null>(null)
   const [name, setName] = useState('')
   const [drafts, setDrafts] = useState<Draft[]>([{ key: 1, name: '', crop: null }])
+  const [split, setSplit] = useState<Split>(() => evenSplit(1))
   const [newId, setNewId] = useState('')
+  // 구역 수가 바뀌면 격자 모양이 통째로 달라져 경계선 자리를 다시 잡는다
+  const setCount = (n: number) => setSplit(evenSplit(n))
+  const moveLine = (axis: 'xs' | 'ys', i: number, v: number) =>
+    setSplit((s) => ({ ...s, [axis]: s[axis].map((x, k) => (k === i ? v : x)) }))
 
   const query = q.trim()
   const results = query ? ADDRESS_BOOK.filter((a) => (a.address + a.hint).includes(query)) : ADDRESS_BOOK
@@ -276,6 +272,7 @@ function FindFarmSheet({ onClose }: { onClose: () => void }) {
   const patch = (key: number, p: Partial<Draft>) =>
     setDrafts((list) => list.map((z) => (z.key === key ? { ...z, ...p } : z)))
 
+  const preview = draftZones(drafts, picked?.areaM2 ?? 0, split)
   const titles = { 1: '내 밭 찾기', 2: '이 밭이 맞나요?', 3: '구역 나누기', 4: '밭을 등록했어요' }
 
   return (
@@ -310,8 +307,12 @@ function FindFarmSheet({ onClose }: { onClose: () => void }) {
                     name: name.trim(),
                     address: picked.address,
                     region,
-                    areaM2: picked.areaM2,
-                    zones: drafts.map((z) => ({ name: z.name.trim(), crop: z.crop! })),
+                    zones: preview.map((z) => ({
+                      name: z.name,
+                      crop: z.crop,
+                      areaM2: z.areaM2,
+                      points: z.points,
+                    })),
                   }),
                 )
                 setStep(4)
@@ -420,15 +421,45 @@ function FindFarmSheet({ onClose }: { onClose: () => void }) {
       {step === 3 && picked && (
         <div className="find-step">
           <div className="locate locate--zones">
-            <FieldMap zones={draftZones(drafts, picked.areaM2)} ariaLabel="나눈 구역 미리 보기" className="locate__map" zoneLabel={(z) => z.crop} />
+            <FieldMap zones={preview} ariaLabel="나눈 구역 미리 보기" className="locate__map" zoneLabel={(z) => z.crop} />
           </div>
+
+          {(split.xs.length > 0 || split.ys.length > 0) && (
+            <div className="split">
+              <p className="split__head">
+                경계를 밀어 넓이를 맞춰요
+                <button type="button" className="split__reset" onClick={() => setCount(drafts.length)}>
+                  <Icon name="arrow-counter-clockwise" size={16} />
+                  똑같이 나누기
+                </button>
+              </p>
+              {([['xs', '세로 경계'], ['ys', '가로 경계']] as const).map(([axis, label]) =>
+                split[axis].map((v, i) => (
+                  <label key={`${axis}${i}`} className="split__row">
+                    <span>{label}{split[axis].length > 1 ? ` ${i + 1}` : ''}</span>
+                    <input
+                      type="range"
+                      min={(split[axis][i - 1] ?? 0) + 10}
+                      max={(split[axis][i + 1] ?? 100) - 10}
+                      value={v}
+                      onChange={(e) => moveLine(axis, i, +e.target.value)}
+                    />
+                  </label>
+                )),
+              )}
+            </div>
+          )}
+
           <p className="find-step__label">부르기 편한 이름과 심을 작물을 정해 주세요</p>
           <ul className="draft-list">
             {drafts.map((z, i) => (
               <li key={z.key} className="draft">
                 <div className="draft__head">
                   <label className="field draft__name">
-                    <span className="field__label">구역 {i + 1} 이름</span>
+                    <span className="field__label zone-edit__label">
+                      구역 {i + 1} 이름
+                      <span>{num(toPyeong(preview[i].areaM2))}평</span>
+                    </span>
                     <input
                       className="input"
                       value={z.name}
@@ -442,7 +473,10 @@ function FindFarmSheet({ onClose }: { onClose: () => void }) {
                       type="button"
                       className="icon-btn icon-btn--filled draft__remove"
                       aria-label={`구역 ${i + 1} 삭제`}
-                      onClick={() => setDrafts((list) => list.filter((x) => x.key !== z.key))}
+                      onClick={() => {
+                        setDrafts((list) => list.filter((x) => x.key !== z.key))
+                        setCount(drafts.length - 1)
+                      }}
                     >
                       <Icon name="x" size={20} />
                     </button>
@@ -456,9 +490,10 @@ function FindFarmSheet({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               className="btn btn--outline"
-              onClick={() =>
+              onClick={() => {
                 setDrafts((list) => [...list, { key: Date.now(), name: '', crop: null }])
-              }
+                setCount(drafts.length + 1)
+              }}
             >
               <Icon name="plus" size={20} />
               구역 추가
