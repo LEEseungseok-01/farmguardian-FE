@@ -61,13 +61,16 @@ type Props = {
   zones: Zone[]
   selectedId?: string
   onSelect?: (id: string) => void
+  /** 구역에 마우스를 올리거나 뗄 때. 뗐을 때는 null */
+  onHover?: (id: string | null) => void
   zoneLabel?: (z: Zone) => string
   style?: CSSProperties
   className?: string
   ariaLabel: string
 }
 
-export function FieldMap({ zones, selectedId, onSelect, zoneLabel, style, className, ariaLabel }: Props) {
+export function FieldMap({ zones, selectedId, onSelect, onHover, zoneLabel, style, className, ariaLabel }: Props) {
+  const interactive = !!(onSelect || onHover)
   const all = zones.flatMap((z) => z.points)
   const minX = Math.min(...all.map((p) => p[0]))
   const maxX = Math.max(...all.map((p) => p[0]))
@@ -150,12 +153,16 @@ export function FieldMap({ zones, selectedId, onSelect, zoneLabel, style, classN
           <g
             key={z.id}
             className={`zone${sel ? ' is-selected' : ''}`}
-            role={onSelect ? 'button' : undefined}
-            tabIndex={onSelect ? 0 : undefined}
+            role={interactive ? 'button' : undefined}
+            tabIndex={interactive ? 0 : undefined}
             aria-pressed={onSelect ? sel : undefined}
-            aria-label={onSelect ? `${z.name}, ${label}` : undefined}
+            aria-label={interactive ? `${z.name}, ${label}` : undefined}
             onClick={() => onSelect?.(z.id)}
             onKeyDown={(e) => onKey(e, z.id)}
+            onPointerEnter={(e) => e.pointerType === 'mouse' && onHover?.(z.id)}
+            onPointerLeave={(e) => e.pointerType === 'mouse' && onHover?.(null)}
+            onFocus={() => onHover?.(z.id)}
+            onBlur={() => onHover?.(null)}
           >
             <path d={d} fill="url(#crop-rows)" className="zone__rows" />
             <path d={d} className="zone__shape" vectorEffect="non-scaling-stroke" />
