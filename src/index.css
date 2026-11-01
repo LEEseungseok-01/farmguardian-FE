@@ -482,18 +482,15 @@ img {
 }
 
 .appbar__pick {
-  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 1px;
-}
-
-.appbar__pick select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  opacity: 0;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
   font: inherit;
+  color: inherit;
   cursor: pointer;
 }
 

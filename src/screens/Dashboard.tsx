@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AppBar } from '../components/AppBar'
 import { BottomNav } from '../components/BottomNav'
@@ -5,14 +6,17 @@ import { DrugCard } from '../components/DrugCard'
 import { Icon } from '../components/Icon'
 import { REGION_STATS, drugById, zoneName } from '../data/mock'
 import { num } from '../lib/date'
-import { eul, iga } from '../lib/korean'
+import { eul } from '../lib/korean'
 import { evaluate, groupColor, groupLabel, registeredDrugs, seasonRecords } from '../lib/verdict'
 import { useApp } from '../state/AppState'
 import './Dashboard.css'
 import { EmptyArt } from '../components/EmptyArt'
+import { FieldMap } from '../components/FieldMap'
+import { Sheet } from '../components/Sheet'
 
 export default function Dashboard() {
-  const { farms, currentFarm, setCurrentFarm, farmZones, zone, selectZone, records, today, pestOf, inventory } = useApp()
+  const { farms, zones, currentFarm, setCurrentFarm, farmZones, zone, selectZone, records, today, pestOf, inventory } = useApp()
+  const [pickFarm, setPickFarm] = useState(false)
   const pest = pestOf(zone)
 
   // 이 구역 이번 농사에 계통을 몇 번씩 썼나. 농가가 아는 건 번호가 아니라 약 이름이라 같이 모은다
@@ -63,19 +67,10 @@ export default function Dashboard() {
         title="통계"
         sub={
           farms.length > 1 ? (
-            <span className="appbar__pick">
+            <button type="button" className="appbar__pick" onClick={() => setPickFarm(true)}>
               {currentFarm.name}
               <Icon name="caret-down" size={14} />
-              <select
-                value={currentFarm.id}
-                onChange={(e) => setCurrentFarm(e.target.value)}
-                aria-label="밭 고르기"
-              >
-                {farms.map((f) => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
-              </select>
-            </span>
+            </button>
           ) : (
             currentFarm.name
           )
@@ -163,7 +158,7 @@ export default function Dashboard() {
             <>
               <p className="lede">
                 {last
-                  ? `직전에 쓴 ${iga(last.name)} 그룹 ${groupLabel(last.group)}. 다른 그룹을 먼저 보여 드려요`
+                  ? `직전에 쓴 '${last.name}' '그룹 ${groupLabel(last.group)}'. 다른 그룹을 먼저 보여 드려요`
                   : `${pest?.name}에 쓸 수 있는 약이에요.`}
               </p>
               <ul className="drug-group__list">
@@ -236,6 +231,40 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+      <Sheet open={pickFarm} onClose={() => setPickFarm(false)} title="밭 고르기">
+        <ul className="farm-list" role="radiogroup" aria-label="밭 고르기">
+          {farms.map((f) => {
+            const zs = zones.filter((z) => z.farmId === f.id)
+            const on = f.id === currentFarm.id
+            return (
+              <li key={f.id}>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  className={`farm-item${on ? ' is-on' : ''}`}
+                  onClick={() => {
+                    setCurrentFarm(f.id)
+                    setPickFarm(false)
+                  }}
+                >
+                  <span className="farm-item__thumb" aria-hidden="true">
+                    <FieldMap zones={zs} ariaLabel="" className="farm-item__map" />
+                  </span>
+                  <span className="farm-item__body">
+                    <span className="farm-item__name">{f.name}</span>
+                    <span className="farm-item__addr">{f.address}</span>
+                  </span>
+                  <span className="farm-item__radio" aria-hidden="true">
+                    {on && <Icon name="check" size={16} />}
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </Sheet>
+
       <BottomNav />
     </div>
   )
