@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AppBar } from '../components/AppBar'
 import { BottomNav } from '../components/BottomNav'
-import { DrugCard } from '../components/DrugCard'
+import { DrugCard, GroupChip } from '../components/DrugCard'
 import { Icon } from '../components/Icon'
 import { REGION_STATS, drugById, zoneName } from '../data/mock'
 import { num } from '../lib/date'
@@ -156,11 +156,18 @@ export default function Dashboard() {
           <h2 id="next-title" className="section-heading section-heading--sm">다음에 쓸 약</h2>
           {next.length ? (
             <>
-              <p className="lede">
-                {last
-                  ? `직전에 쓴 '${last.name}' '그룹 ${groupLabel(last.group)}'. 다른 그룹을 먼저 보여 드려요`
-                  : `${pest?.name}에 쓸 수 있는 약이에요.`}
-              </p>
+              {last ? (
+                <p className="lede">
+                  <span className="lede__row">
+                    직전에 쓴 약
+                    <span className="group-chip group-chip--flat">{last.name}</span>
+                    <GroupChip group={last.group} />
+                  </span>
+                  다른 그룹을 먼저 보여 드려요
+                </p>
+              ) : (
+                <p className="lede">{pest?.name}에 쓸 수 있는 약이에요.</p>
+              )}
               <ul className="drug-group__list">
                 {next.map((v) => (
                   <li key={v.drug.id}>

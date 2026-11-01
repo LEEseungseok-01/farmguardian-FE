@@ -157,6 +157,14 @@
   color: var(--text-2);
 }
 
+.lede__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 3px;
+}
+
 .fine {
   font-size: var(--fs-xs);
   color: var(--text-3);
