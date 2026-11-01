@@ -1,4 +1,21 @@
 .DS_Store
 
-# 내부 문서는 올리지 않는다 (심사 자평·교수님 메일 초안)
+# 내부 자료·아카이브. 레포가 공개라 올리지 않는다
+archive/
 docs/internal/
+docs/api-keys.md
+
+# 노드
+node_modules/
+dist/
+build/
+.cache/
+.vite/
+vite.config.*.timestamp-*
+*.tsbuildinfo
+*.log
+
+# 환경변수. API 키는 서버 환경변수로만 둔다
+.env
+.env.*
+!.env.example
