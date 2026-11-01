@@ -8,29 +8,29 @@ import './Settings.css'
 
 // 심사와 농가 모두 「이 앱이 어디까지 책임지나」를 묻는다. 말로 하지 말고 적어 둔다
 const DOES = [
-  '등록된 약인지 농약안전정보시스템에서 찾아요',
-  '수확 전 일수를 수확 가능한 날짜로 바꿔 줘요',
-  '이번 농사에 몇 번 썼는지 세요',
-  '같은 그룹을 연달아 썼는지 세요',
+  { name: '등록 조회', how: '작물과 병해충에 등록된 약인지 확인' },
+  { name: '수확 가능일 환산', how: '수확 전 일수를 달력 날짜로 변환' },
+  { name: '사용 횟수 집계', how: '이번 작기 살포 기록 합산' },
+  { name: '작용기작 반복 점검', how: '직전 살포와 같은 그룹인지 대조' },
 ]
 
 const DOES_NOT = [
-  '사진으로 병해충을 진단하지 않아요. 사용자가 골라요',
-  '저항성을 예측하지 않아요. 쓴 횟수를 셀 뿐이에요',
-  '약효를 보증하지 않아요',
+  { name: '병해충 진단', how: '사진 판독 없음. 사용자가 직접 선택' },
+  { name: '저항성 예측', how: '확률 모델 없음. 살포 횟수만 집계' },
+  { name: '약효 보증', how: '방제 효과와 수확물 안전성을 보장하지 않음' },
 ]
 
 const SOURCES = [
-  { name: DATA_SOURCE.name, use: `등록 정보와 안전사용기준 (${DATA_SOURCE.asOf} 기준)` },
-  { name: '국가농작물병해충관리시스템', use: '병해충 도감과 사진' },
-  { name: '농림축산식품 공공데이터 팜맵', use: '밭 경계' },
-  { name: '기상청 단기예보', use: '오늘 날씨' },
+  { name: DATA_SOURCE.name, how: `등록 정보와 안전사용기준 (${DATA_SOURCE.asOf} 기준)` },
+  { name: '국가농작물병해충관리시스템', how: '병해충 도감과 사진' },
+  { name: '농림축산식품 공공데이터 팜맵', how: '밭 경계' },
+  { name: '기상청 단기예보', how: '오늘 날씨' },
 ]
 
-const KEEPS = [
-  { name: '카카오 계정 식별자', why: '같은 사람인지 알아보려고요' },
-  { name: '밭 위치와 구역', why: '어느 밭 이야기인지 가리려고요' },
-  { name: '살포 기록', why: '횟수와 그룹을 세려고요' },
+const PRIVACY = [
+  { name: '카카오 계정 식별자', how: '회원 식별과 로그인 유지' },
+  { name: '밭 위치와 구역 정보', how: '구역별 판정과 이력 관리' },
+  { name: '살포 이력', how: '사용 횟수와 작용기작 반복 집계' },
 ]
 
 export default function Settings() {
@@ -97,11 +97,21 @@ export default function Settings() {
             </summary>
             <p className="set-fold__head">하는 일</p>
             <ul className="set-fold__list">
-              {DOES.map((t) => <li key={t}>{t}</li>)}
+              {DOES.map((d) => (
+                <li key={d.name}>
+                  <b>{d.name}</b>
+                  <span>{d.how}</span>
+                </li>
+              ))}
             </ul>
             <p className="set-fold__head set-fold__head--off">안 하는 일</p>
-            <ul className="set-fold__list set-fold__list--off">
-              {DOES_NOT.map((t) => <li key={t}>{t}</li>)}
+            <ul className="set-fold__list">
+              {DOES_NOT.map((d) => (
+                <li key={d.name}>
+                  <b>{d.name}</b>
+                  <span>{d.how}</span>
+                </li>
+              ))}
             </ul>
           </details>
 
@@ -111,11 +121,11 @@ export default function Settings() {
               데이터 출처
               <Icon name="caret-down" size={18} className="set-fold__caret" />
             </summary>
-            <ul className="set-fold__list set-fold__list--plain">
-              {SOURCES.map((s) => (
-                <li key={s.name}>
-                  <b>{s.name}</b>
-                  <span>{s.use}</span>
+            <ul className="set-fold__list">
+              {SOURCES.map((d) => (
+                <li key={d.name}>
+                  <b>{d.name}</b>
+                  <span>{d.how}</span>
                 </li>
               ))}
             </ul>
@@ -124,19 +134,19 @@ export default function Settings() {
           <details className="set-fold">
             <summary>
               <Icon name="lock-simple" size={22} />
-              다루는 정보
+              개인정보 수집 항목
               <Icon name="caret-down" size={18} className="set-fold__caret" />
             </summary>
-            <ul className="set-fold__list set-fold__list--plain">
-              {KEEPS.map((k) => (
-                <li key={k.name}>
-                  <b>{k.name}</b>
-                  <span>{k.why}</span>
+            <ul className="set-fold__list">
+              {PRIVACY.map((d) => (
+                <li key={d.name}>
+                  <b>{d.name}</b>
+                  <span>{d.how}</span>
                 </li>
               ))}
             </ul>
             <p className="set-fold__note">
-              기록은 농약관리법에 따른 증빙으로도 쓰여요. 취소한 기록도 지우지 않고 취소 표시만 남겨요.
+              살포 이력은 농약관리법상 증빙 자료로 보관하며, 취소한 기록도 삭제 없이 취소 상태로 보존합니다.
             </p>
           </details>
         </section>
