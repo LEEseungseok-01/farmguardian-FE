@@ -1,7 +1,7 @@
 // 날짜는 'YYYY-MM-DD' 문자열로 다룬다. 시간대 영향을 받지 않도록 UTC 일 단위로 계산한다.
 const DAY = 86400000
 
-export const toDayNumber = (s: string) =>
+const toDayNumber = (s: string) =>
   Math.round(Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / DAY)
 
 export const diffDays = (a: string, b: string) => toDayNumber(a) - toDayNumber(b)
@@ -13,7 +13,6 @@ export const fmtMD = (s: string) => `${+s.slice(5, 7)}월 ${+s.slice(8, 10)}일`
 
 export const fmtFull = (s: string) => `${s.slice(0, 4)}년 ${fmtMD(s)}`
 
-export const fmtDots = (s: string) => s.split('-').join('.')
 
 /** 연도 없는 숫자 날짜. 2026-06-10 → 06.10 */
 export const fmtMDnum = (s: string) => `${s.slice(5, 7)}.${s.slice(8, 10)}`

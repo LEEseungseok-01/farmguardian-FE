@@ -7,7 +7,7 @@ export type Status = 'ok' | 'caution' | 'no' | 'unknown' | 'preplant'
 export type CheckStatus = Status | 'skip'
 
 /** 여러 상태가 겹치면 센 쪽을 보여준다: 불가 > 심을 때 > 확인 필요 > 주의 > 가능 */
-export const PRIORITY: Record<Status, number> = { no: 5, preplant: 4, unknown: 3, caution: 2, ok: 1 }
+const PRIORITY: Record<Status, number> = { no: 5, preplant: 4, unknown: 3, caution: 2, ok: 1 }
 
 /** 목록에서는 쓸 수 있는 약이 위로 온다 */
 export const LIST_ORDER: Status[] = ['ok', 'caution', 'unknown', 'preplant', 'no']
@@ -20,7 +20,7 @@ export const STATUS_META: Record<Status, { label: string; icon: IconName; headli
   preplant: { label: '심을 때', icon: 'plant', headline: '심은 뒤에 판정할 수 있어요', check: '심기 전' },
 }
 
-export const worst = (list: Status[]): Status =>
+const worst = (list: Status[]): Status =>
   list.reduce<Status>((a, b) => (PRIORITY[b] > PRIORITY[a] ? b : a), 'ok')
 
 export type CheckKey = 'reg' | 'timing' | 'count' | 'group'
@@ -38,7 +38,7 @@ export type Verdict = {
   reg?: Registration
 }
 
-export const WATER_PER_M2 = 0.2 // 10아르당 200 L
+const WATER_PER_M2 = 0.2 // 10아르당 200 L
 
 /** 이번 농사(심은 날 이후)에 이 구역에 실제로 뿌린 기록. 취소한 기록은 뺀다. */
 export function seasonRecords(zone: Zone, records: SprayRecord[], today: string) {

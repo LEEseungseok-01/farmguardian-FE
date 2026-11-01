@@ -19,7 +19,7 @@ export function ro(word: string) {
 const CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ'
 
 /** 초성만 뽑는다. 예: '배추' → 'ㅂㅊ' */
-export const initials = (s: string) =>
+const initials = (s: string) =>
   [...s]
     .map((ch) => {
       const c = ch.charCodeAt(0) - 0xac00
