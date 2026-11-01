@@ -8,6 +8,7 @@ import Login from './screens/Login'
 import MapHome from './screens/MapHome'
 import PestSelect from './screens/PestSelect'
 import ScanSheet from './screens/ScanSheet'
+import Settings from './screens/Settings'
 import Verdict from './screens/Verdict'
 import { AppProvider } from './state/AppState'
 
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/history" element={<History />} />
           <Route path="/fields" element={<Fields />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Toast />

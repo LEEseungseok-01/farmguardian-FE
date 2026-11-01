@@ -232,10 +232,6 @@ export default function Dashboard() {
             <Icon name="clock-counter-clockwise" size={20} />
             살포 이력
           </Link>
-          <Link to="/fields" className="btn btn--soft">
-            <Icon name="sliders-horizontal" size={20} />
-            밭 관리
-          </Link>
         </div>
       </div>
       <Sheet open={pickFarm} onClose={() => setPickFarm(false)} title="밭 고르기">

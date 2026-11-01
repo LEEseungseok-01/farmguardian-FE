@@ -79,8 +79,8 @@ export default function MapHome() {
               </span>
             </span>
           </Link>
-          <Link to="/fields" className="icon-btn icon-btn--glass" aria-label="밭과 구역 관리">
-            <Icon name="sliders-horizontal" size={24} />
+          <Link to="/settings" className="icon-btn icon-btn--glass" aria-label="설정">
+            <Icon name="gear" size={24} />
           </Link>
         </div>
 

@@ -9,6 +9,7 @@ import { ProductArt } from '../components/ProductArt'
 import { StatusBadge } from '../components/StatusBadge'
 import { ZONES, drugById } from '../data/mock'
 import type { CheckStatus, Status } from '../lib/verdict'
+import { useApp } from '../state/AppState'
 import './Login.css'
 
 const FEATURES: { kind: FeatureKind; title: string; body: string; wide?: boolean }[] = [
@@ -80,6 +81,7 @@ const FLOW: { title: string; body: string }[] = [
 
 export default function Login() {
   const navigate = useNavigate()
+  const { signIn } = useApp()
   const [active, setActive] = useState<string | null>(null)
   const [last, setLast] = useState('z-a')
   const [touched, setTouched] = useState(false)
@@ -178,7 +180,14 @@ export default function Login() {
       </section>
 
       <div className="login__actions">
-        <button type="button" className="btn btn--kakao btn--lg" onClick={() => navigate('/map')}>
+        <button
+          type="button"
+          className="btn btn--kakao btn--lg"
+          onClick={() => {
+            signIn()
+            navigate('/map')
+          }}
+        >
           <CustomIcon name="kakao" size={22} />
           카카오로 시작하기
         </button>

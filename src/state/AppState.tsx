@@ -8,6 +8,10 @@ type Toast = { id: number; text: string; actionLabel?: string; actionTo?: string
 
 type AppState = {
   today: string
+  /** 카카오로 들어왔는지. 둘러보기로 들어오면 false */
+  signedIn: boolean
+  signIn: () => void
+  signOut: () => void
   farms: Farm[]
   zones: Zone[]
   records: SprayRecord[]
@@ -52,6 +56,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [currentFarmId, setCurrentFarmId] = useState('f1')
   const [zoneByFarm, setZoneByFarm] = useState<Record<string, string>>({ f1: 'z-a', f2: 'z-2a' })
   const [pestByZone, setPestByZone] = useState(DEFAULT_PEST_BY_ZONE)
+  // 새로고침해도 로그인이 풀리지 않게 남겨 둔다. 사파리 비공개 모드에서는 던지므로 감싼다
+  const [signedIn, setSignedIn] = useState(() => {
+    try {
+      return localStorage.getItem('fg.signedIn') === '1'
+    } catch {
+      return false
+    }
+  })
+  const setAuth = useCallback((on: boolean) => {
+    setSignedIn(on)
+    try {
+      localStorage.setItem('fg.signedIn', on ? '1' : '0')
+    } catch {
+      /* 저장 못 해도 이번 세션은 돌아간다 */
+    }
+  }, [])
   const [toast, setToast] = useState<Toast | null>(null)
   const timer = useRef<number>(0)
 
@@ -80,6 +100,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       zones,
       records,
       inventory,
+      signedIn,
+      signIn: () => setAuth(true),
+      signOut: () => setAuth(false),
       currentFarm,
       farmZones,
       zone,
@@ -127,7 +150,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toast,
       showToast,
     }),
-    [farms, zones, records, inventory, currentFarm, farmZones, zone, pestOf, toast, showToast],
+    [farms, zones, records, inventory, signedIn, setAuth, currentFarm, farmZones, zone, pestOf, toast, showToast],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
