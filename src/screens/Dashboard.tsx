@@ -6,7 +6,7 @@ import { Icon } from '../components/Icon'
 import { REGION_STATS, drugById, zoneName } from '../data/mock'
 import { num } from '../lib/date'
 import { eul, iga } from '../lib/korean'
-import { evaluate, groupColor, registeredDrugs, seasonRecords } from '../lib/verdict'
+import { evaluate, groupColor, groupLabel, registeredDrugs, seasonRecords } from '../lib/verdict'
 import { useApp } from '../state/AppState'
 import './Dashboard.css'
 import { EmptyArt } from '../components/EmptyArt'
@@ -26,7 +26,7 @@ export default function Dashboard() {
     if (!cur.names.includes(d.name)) cur.names.push(d.name)
     counts.set(key, cur)
   }
-  const rows = [...counts.values()].sort((a, b) => b.n - a.n || Number(a.group) - Number(b.group))
+  const rows = [...counts.values()].sort((a, b) => b.n - a.n || a.group.localeCompare(b.group))
   const total = season.length
   const max = rows.length ? rows[0].n : 0
   // 한 계통이 절반을 넘으면 그 줄만 색을 쓴다
@@ -87,7 +87,7 @@ export default function Dashboard() {
             {total === 0
               ? `${zoneName(zone)}에 아직 뿌린 기록이 없어요`
               : heavy
-                ? `${eul(heavy.names.length > 1 ? `${heavy.group}번 계통` : heavy.names[0])} ${heavy.n}번 썼어요`
+                ? `${eul(heavy.names.length > 1 ? `그룹 ${groupLabel(heavy.group)} 약` : heavy.names[0])} ${heavy.n}번 썼어요`
                 : rows.length === 1
                   ? `${rows[0].names[0]} 한 가지만 썼어요`
                   : `서로 다른 약 ${rows.length}가지를 돌려 썼어요`}
@@ -105,7 +105,7 @@ export default function Dashboard() {
                     {s.names[0]}
                     {s.names.length > 1 && <em>외 {s.names.length - 1}개</em>}
                     <span>
-                      {s.kind} {s.group}번 계통
+                      {s.kind} 그룹 {groupLabel(s.group)}
                     </span>
                   </span>
                   <span className="mix__bar">
@@ -121,12 +121,12 @@ export default function Dashboard() {
             {heavy ? (
               <>
                 <Icon name="warning" weight="fill" size={18} />
-                같은 계통을 거듭 쓰면 그 약에 견디는 벌레만 남아요.
+                같은 그룹을 거듭 쓰면 그 약에 견디는 벌레만 남아요.
               </>
             ) : (
               <>
                 <Icon name="info" size={18} />
-                계통은 약이 벌레를 죽이는 방식이에요. 번호가 같으면 성분이 달라도 같은 방식이에요.
+                그룹은 약이 벌레를 죽이는 방식이에요. 봉지에 적힌 기호가 같으면 성분이 달라도 같은 방식이에요.
               </>
             )}
           </p>
@@ -138,7 +138,7 @@ export default function Dashboard() {
             <>
               <p className="lede">
                 {last
-                  ? `직전에 쓴 ${iga(last.name)} ${last.group}번 계통이라 다른 계통을 먼저 보여 드려요`
+                  ? `직전에 쓴 ${iga(last.name)} 그룹 ${groupLabel(last.group)} 약이라 다른 그룹을 먼저 보여 드려요`
                   : `${pest?.name}에 쓸 수 있는 약이에요.`}
               </p>
               <ul className="drug-group__list">
@@ -175,7 +175,7 @@ export default function Dashboard() {
             </p>
             <p className="nbr__flag">
               <Icon name={overlap ? 'warning' : 'check-circle'} weight="fill" size={18} />
-              {currentFarm.region} 농가 {Math.round(regionShare * 100)}%가 {regionTop}번 계통을 써요
+              {currentFarm.region} 농가 {Math.round(regionShare * 100)}%가 그룹 {groupLabel(regionTop)} 약을 써요
               {overlap ? `. 올해 쓴 ${overlap.names[0]}도 ${regionTop}번이에요` : ''}
             </p>
             <ul className="region-list">

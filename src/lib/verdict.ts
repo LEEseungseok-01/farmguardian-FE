@@ -85,7 +85,7 @@ export function evaluate(drug: Drug, zone: Zone, pest: Pest, records: SprayRecor
         { label: '수확 전 일수', value: '해당 없음' },
         { label: '최대 횟수', value: '해당 없음' },
         { label: '희석', value: '해당 없음' },
-        { label: '계통', value: `${drug.group}번`, sub: drug.kind },
+        { label: '그룹', value: drug.group, sub: drug.kind },
       ],
     }
   }
@@ -166,7 +166,13 @@ export function evaluate(drug: Drug, zone: Zone, pest: Pest, records: SprayRecor
   let group: Check
   let groupSub: string
   const victim = drug.kind === '살균제' ? '병균' : '벌레'
-  if (lastDrug && lastDrug.group === drug.group && prevDrug && prevDrug.group === drug.group) {
+  if (drug.group.startsWith('미분류')) {
+    group = {
+      key: 'group', label: '계통', status: 'unknown', tag: '자료 없음',
+      text: `이 약은 ${victim}을 죽이는 방식이 분류되지 않아 따질 수 없어요.`,
+    }
+    groupSub = '자료 없음'
+  } else if (lastDrug && lastDrug.group === drug.group && prevDrug && prevDrug.group === drug.group) {
     group = {
       key: 'group', label: '계통', status: 'no', tag: '두 번 연속',
       text: `${victim}한테는 같은 약을 세 번 쓰는 셈이에요.`,
@@ -211,7 +217,7 @@ export function evaluate(drug: Drug, zone: Zone, pest: Pest, records: SprayRecor
         value: reg.dilution ? `${num(reg.dilution)}배` : '자료 없음',
         sub: `물 ${num(water)} L`,
       },
-      { label: '계통', value: `${drug.group}번`, sub: groupSub },
+      { label: '그룹', value: drug.group, sub: groupSub },
     ],
   }
 }
@@ -236,7 +242,10 @@ export function alternatives(v: Verdict, zone: Zone, pest: Pest, records: SprayR
     .slice(0, 3)
 }
 
-const GROUP_ORDER = ['5', '28', '15', '6', '4', '11', '40', '9', '1', '21', '25', '31', '36']
+const GROUP_ORDER = ['5', '28', '15', '6', '4a', '11a', '아5', '9b', '1b', '다4', '라4', '가4', '가1', '다3']
+
+/** 칩에 넣을 짧은 기호. 봉지 기호는 '미분류(살균제)'처럼 괄호가 붙어 온다 */
+export const groupLabel = (group: string) => group.replace(/\(.*\)/, '')
 
 /** 계통마다 정해진 차트 색 (CSS 변수) */
 export const groupColor = (group: string) => {

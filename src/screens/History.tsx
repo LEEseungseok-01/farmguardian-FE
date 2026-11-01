@@ -7,6 +7,7 @@ import { ProductArt } from '../components/ProductArt'
 import { Sheet } from '../components/Sheet'
 import { DRUGS, PESTS, drugById, pestById, zoneName, type SprayRecord } from '../data/mock'
 import { fmtMD, monthOf, weekday } from '../lib/date'
+import { groupLabel } from '../lib/verdict'
 import { useApp } from '../state/AppState'
 import './History.css'
 import { EmptyArt } from '../components/EmptyArt'
@@ -270,12 +271,12 @@ function AddRecordSheet({ onClose, today, defaultZone }: { onClose: () => void; 
           <select className="input" value={validDrug} onChange={(e) => setDrugId(e.target.value)}>
             <optgroup label="이 병해충에 등록된 약">
               {drugs.map((d) => (
-                <option key={d.id} value={d.id}>{d.name} {d.form} (계통 {d.group}번)</option>
+                <option key={d.id} value={d.id}>{d.name} {d.form} (그룹 {groupLabel(d.group)})</option>
               ))}
             </optgroup>
             <optgroup label="그 밖의 약">
               {others.map((d) => (
-                <option key={d.id} value={d.id}>{d.name} {d.form} (계통 {d.group}번)</option>
+                <option key={d.id} value={d.id}>{d.name} {d.form} (그룹 {groupLabel(d.group)})</option>
               ))}
             </optgroup>
           </select>

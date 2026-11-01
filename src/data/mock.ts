@@ -231,12 +231,12 @@ export const DRUGS: Drug[] = [
   },
   {
     id: 'd-dursban', name: '더스반', form: '유제', ingredient: '클로르피리포스', percent: '25%',
-    company: '성보화학', group: '1', kind: '살충제',
+    company: '성보화학', group: '1b', kind: '살충제',
     regs: [r('배추', 'p-dbm', 35, 2, 1000), r('배추', 'p-flea', 35, 2, 1000)],
   },
   {
     id: 'd-bio', name: '바이오킬', form: '수화제', ingredient: '비티쿠르스타키', percent: '10%',
-    company: '동방아그로', group: '11', kind: '살충제',
+    company: '동방아그로', group: '11a', kind: '살충제',
     regs: [r('배추', 'p-dbm', null, null, 1000), r('배추', 'p-cw', null, null, 1000)],
   },
   {
@@ -246,52 +246,52 @@ export const DRUGS: Drug[] = [
   },
   {
     id: 'd-conido', name: '코니도', form: '수화제', ingredient: '이미다클로프리드', percent: '10%',
-    company: '경농', group: '4', kind: '살충제',
+    company: '경농', group: '4a', kind: '살충제',
     regs: [r('배추', 'p-aphid', 14, 2, 2000), r('감자', 'p-aphid', 14, 3, 2000)],
   },
   {
     id: 'd-chess', name: '체스', form: '수화제', ingredient: '피메트로진', percent: '25%',
-    company: '농협케미컬', group: '9', kind: '살충제',
+    company: '농협케미컬', group: '9b', kind: '살충제',
     regs: [r('배추', 'p-aphid', 7, 3, 4000), r('감자', 'p-aphid', 7, 3, 4000), r('무', 'p-aphid', 7, 3, 4000), r('당근', 'p-aphid', 14, 2, 4000), r('대파', 'p-aphid', 7, 2, 4000)],
   },
   {
     id: 'd-mospilan', name: '모스피란', form: '수화제', ingredient: '아세타미프리드', percent: '8%',
-    company: '동방아그로', group: '4', kind: '살충제',
+    company: '동방아그로', group: '4a', kind: '살충제',
     regs: [r('배추', 'p-aphid', 7, 3, 2000), r('배추', 'p-flea', 7, 3, 2000), r('감자', 'p-aphid', 7, 3, 2000)],
   },
   {
     id: 'f-forum', name: '포룸', form: '수화제', ingredient: '디메토모르프', percent: '25%',
-    company: '경농', group: '40', kind: '살균제',
+    company: '경농', group: '아5', kind: '살균제',
     regs: [r('배추', 'p-dm', 7, 3, 1000), r('감자', 'p-lb', 7, 4, 1000)],
   },
   {
     id: 'f-ridomil', name: '리도밀골드', form: '입상수화제', ingredient: '메탈락실엠', percent: '25%',
-    company: '농협케미컬', group: '4', kind: '살균제',
+    company: '농협케미컬', group: '가1', kind: '살균제',
     regs: [r('배추', 'p-dm', 14, 2, 2000), r('감자', 'p-lb', 14, 3, 2000)],
   },
   {
     id: 'f-amistar', name: '아미스타', form: '액상수화제', ingredient: '아족시스트로빈', percent: '20%',
-    company: '(주)팜한농', group: '11', kind: '살균제',
+    company: '(주)팜한농', group: '다3', kind: '살균제',
     regs: [r('배추', 'p-dm', 7, 3, 2000), r('감자', 'p-lb', 7, 3, 2000)],
   },
   {
     id: 'f-mirikat', name: '미리카트', form: '액상수화제', ingredient: '사이아조파미드', percent: '9.4%',
-    company: '성보화학', group: '21', kind: '살균제',
+    company: '성보화학', group: '다4', kind: '살균제',
     regs: [r('감자', 'p-lb', 7, 4, 2000), r('배추', 'p-cr', 30, 1, 2000)],
   },
   {
     id: 'f-agrepto', name: '아그렙토', form: '수화제', ingredient: '스트렙토마이신', percent: '20%',
-    company: '농협케미컬', group: '25', kind: '살균제',
+    company: '농협케미컬', group: '라4', kind: '살균제',
     regs: [r('배추', 'p-sr', 14, 3, 1000), r('감자', 'p-sr', 14, 3, 1000), r('무', 'p-sr', 14, 3, 1000), r('양배추', 'p-sr', 14, 2, 1000), r('당근', 'p-sr', 21, 2, 1000)],
   },
   {
     id: 'f-starner', name: '스타너', form: '수화제', ingredient: '옥솔린산', percent: '20%',
-    company: '동방아그로', group: '31', kind: '살균제',
+    company: '동방아그로', group: '가4', kind: '살균제',
     regs: [r('배추', 'p-sr', 21, 2, 1000)],
   },
   {
     id: 'f-nebijin', name: '네비자', form: '분제', ingredient: '플루설파마이드', percent: '0.3%',
-    company: '경농', group: '36', kind: '살균제',
+    company: '경농', group: '미분류(살균제)', kind: '살균제',
     regs: [r('배추', 'p-cr', null, 1, null)],
   },
 ]

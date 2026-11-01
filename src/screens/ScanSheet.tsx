@@ -4,7 +4,7 @@ import { Icon } from '../components/Icon'
 import { CompanyMark, ProductArt } from '../components/ProductArt'
 import { Sheet } from '../components/Sheet'
 import { SCAN_RESULT, drugById } from '../data/mock'
-import { groupColor } from '../lib/verdict'
+import { groupColor, groupLabel } from '../lib/verdict'
 import { ro } from '../lib/korean'
 import './ScanSheet.css'
 
@@ -161,7 +161,7 @@ export default function ScanSheet() {
                         <CompanyMark company={d.company} size={16} />
                         {d.company}
                         <span className="group-chip" style={{ ['--gc' as string]: groupColor(d.group) }}>
-                          계통 {d.group}번
+                          그룹 {groupLabel(d.group)}
                         </span>
                       </span>
                       <span className="cand__match">{c.match}</span>

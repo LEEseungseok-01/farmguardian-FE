@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { groupColor, type Verdict } from '../lib/verdict'
+import { groupColor, groupLabel, type Verdict } from '../lib/verdict'
 import { Icon } from './Icon'
 import { ProductArt } from './ProductArt'
 import { StatusBadge } from './StatusBadge'
@@ -11,7 +11,7 @@ export function GroupChip({ group, warn }: { group: string; warn?: boolean }) {
       className={`group-chip${warn ? ' group-chip--warn' : ''}`}
       style={{ ['--gc' as string]: groupColor(group) }}
     >
-      계통 {group}번
+      그룹 {groupLabel(group)}
     </span>
   )
 }
