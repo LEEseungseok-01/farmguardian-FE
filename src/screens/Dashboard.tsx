@@ -12,7 +12,7 @@ import './Dashboard.css'
 import { EmptyArt } from '../components/EmptyArt'
 
 export default function Dashboard() {
-  const { currentFarm, farmZones, zone, selectZone, records, today, pestOf, inventory } = useApp()
+  const { farms, currentFarm, setCurrentFarm, farmZones, zone, selectZone, records, today, pestOf, inventory } = useApp()
   const pest = pestOf(zone)
 
   // 이 구역 이번 농사에 계통을 몇 번씩 썼나. 농가가 아는 건 번호가 아니라 약 이름이라 같이 모은다
@@ -59,7 +59,28 @@ export default function Dashboard() {
 
   return (
     <div className="page page--nav">
-      <AppBar title="통계" sub={currentFarm.name} />
+      <AppBar
+        title="통계"
+        sub={
+          farms.length > 1 ? (
+            <span className="appbar__pick">
+              {currentFarm.name}
+              <Icon name="caret-down" size={14} />
+              <select
+                value={currentFarm.id}
+                onChange={(e) => setCurrentFarm(e.target.value)}
+                aria-label="밭 고르기"
+              >
+                {farms.map((f) => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+              </select>
+            </span>
+          ) : (
+            currentFarm.name
+          )
+        }
+      />
 
       <div className="page__body dash-page">
         <div className="zone-tabs" role="group" aria-label="구역 고르기">
@@ -121,12 +142,16 @@ export default function Dashboard() {
             {heavy ? (
               <>
                 <Icon name="warning" weight="fill" size={18} />
-                같은 그룹을 거듭 쓰면 그 약에 견디는 벌레만 남아요.
+                같은 그룹을 거듭 쓰면 그 약에 견디는 병해충만 남아요.
               </>
             ) : (
               <>
                 <Icon name="info" size={18} />
-                그룹은 약이 벌레를 죽이는 방식이에요. 봉지에 적힌 기호가 같으면 성분이 달라도 같은 방식이에요.
+                <span>
+                  그룹: 농약이 병해충을 죽이는 방식
+                  <br />
+                  봉지에 적힌 기호가 같으면 성분이 달라도 같음
+                </span>
               </>
             )}
           </p>
@@ -138,7 +163,7 @@ export default function Dashboard() {
             <>
               <p className="lede">
                 {last
-                  ? `직전에 쓴 ${iga(last.name)} 그룹 ${groupLabel(last.group)} 약이라 다른 그룹을 먼저 보여 드려요`
+                  ? `직전에 쓴 ${iga(last.name)} 그룹 ${groupLabel(last.group)}. 다른 그룹을 먼저 보여 드려요`
                   : `${pest?.name}에 쓸 수 있는 약이에요.`}
               </p>
               <ul className="drug-group__list">

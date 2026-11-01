@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from './Icon'
 
-export function AppBar({ title, sub, right, fallback = '/map' }: { title: string; sub?: string; right?: ReactNode; fallback?: string }) {
+export function AppBar({ title, sub, right, fallback = '/map' }: { title: string; sub?: ReactNode; right?: ReactNode; fallback?: string }) {
   const navigate = useNavigate()
   const location = useLocation()
   const back = () => (location.key === 'default' ? navigate(fallback) : navigate(-1))

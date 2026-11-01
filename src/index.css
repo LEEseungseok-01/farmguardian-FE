@@ -481,6 +481,22 @@ img {
   text-overflow: ellipsis;
 }
 
+.appbar__pick {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.appbar__pick select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
 .icon-btn {
   flex: none;
   display: grid;
