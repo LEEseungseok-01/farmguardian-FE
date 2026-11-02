@@ -245,6 +245,13 @@
   gap: var(--sp-3);
 }
 
+.login__signup {
+  min-height: 40px;
+  margin-bottom: calc(-1 * var(--sp-2));
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 .login__note {
   text-align: center;
   font-size: var(--fs-xs);

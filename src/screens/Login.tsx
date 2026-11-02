@@ -154,11 +154,11 @@ export default function Login() {
       </section>
 
       <div className="login__actions">
-        <button type="button" className="btn btn--primary btn--lg" onClick={() => setSigningUp(true)}>
-          회원가입
+        <button type="button" className="btn btn--ghost login__signup" onClick={() => setSigningUp(true)}>
+          계정이 없어요
         </button>
-        <button type="button" className="btn btn--ghost" onClick={() => setLoggingIn(true)}>
-          이미 계정이 있어요
+        <button type="button" className="btn btn--primary btn--lg" onClick={() => setLoggingIn(true)}>
+          로그인
         </button>
         <button type="button" className="btn btn--outline btn--lg" onClick={() => setGuide(true)}>
           어떻게 쓰는 건가요?
