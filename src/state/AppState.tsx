@@ -5,6 +5,7 @@ import {
 } from '../data/mock'
 import { api } from '../lib/api'
 import { pointsOf } from '../lib/geo'
+import { toDrug, type ServerPesticide } from '../lib/serverVerdict'
 
 type Toast = { id: number; text: string; actionLabel?: string; actionTo?: string }
 
@@ -23,6 +24,15 @@ type ServerField = {
     area_m2: number
     geometry: { coordinates: [number, number][][][] }
   }[]
+}
+
+type ServerSpray = {
+  id: number
+  pesticide: ServerPesticide
+  pest: { id: number } | null
+  sprayed_on: string
+  source: 'manual' | 'app'
+  cancelled: boolean
 }
 
 type ServerPest = {
@@ -45,6 +55,28 @@ const readUser = (): User | null => {
   } catch {
     return null
   }
+}
+
+// 한국 시간 기준 오늘 (YYYY-MM-DD). BE가 판정에 쓰는 날과 같다
+const todayKst = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(new Date())
+
+const toRecord = (s: ServerSpray, zoneId: string): SprayRecord => ({
+  id: String(s.id),
+  date: s.sprayed_on,
+  zoneId,
+  drugId: String(s.pesticide.id),
+  pestId: s.pest ? String(s.pest.id) : '',
+  cancelled: s.cancelled || undefined,
+  manual: s.source === 'manual' || undefined,
+  drug: toDrug(s.pesticide),
+})
+
+// ponytail: 구역마다 최근 100건만 받는다. 더 쌓이면 페이지를 넘기며 받는다
+async function loadSprays(zones: Zone[]): Promise<SprayRecord[]> {
+  const pages = await Promise.all(
+    zones.map(async (z) => (await api<{ items: ServerSpray[] }>(`/zones/${z.id}/sprays?limit=100`)).items.map((s) => toRecord(s, z.id))),
+  )
+  return pages.flat()
 }
 
 const NO_FARM: Farm = { id: '', name: '', address: '', region: '' }
@@ -122,7 +154,7 @@ type AppState = {
   records: SprayRecord[]
   inventory: string[]
   /** 창고에 넣고 빼기 */
-  toggleInventory: (drugId: string) => void
+  toggleInventory: (drugId: string) => Promise<boolean>
   currentFarm: Farm
   farmZones: Zone[]
   zone: Zone
@@ -132,8 +164,9 @@ type AppState = {
   setCurrentFarm: (id: string) => void
   selectZone: (id: string) => void
   selectPest: (id: string) => void
-  addRecord: (rec: Omit<SprayRecord, 'id'>) => void
-  setRecordCancelled: (id: string, cancelled: boolean) => void
+  /** 저장에 성공했는지. 실패하면 이유를 알림으로 띄운다 */
+  addRecord: (rec: Omit<SprayRecord, 'id' | 'drug'>) => Promise<boolean>
+  setRecordCancelled: (id: string, cancelled: boolean) => Promise<boolean>
   updateZone: (id: string, patch: Partial<Zone>) => void
   /** 작물을 바꾸고 그 구역 기록을 지운다 (되돌릴 수 없음) */
   changeCrop: (id: string, crop: Crop) => void
@@ -155,8 +188,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [farms, setFarms] = useState<Farm[]>(() => (readUser() ? [] : FARMS))
   const [zones, setZones] = useState<Zone[]>(() => (readUser() ? [] : ZONES))
   const [pests, setPests] = useState<Pest[]>(() => (readUser() ? [] : PESTS))
-  const [records, setRecords] = useState(RECORDS)
-  const [inventory, setInventory] = useState<string[]>(INVENTORY)
+  const [records, setRecords] = useState<SprayRecord[]>(() => (readUser() ? [] : RECORDS))
+  const [inventory, setInventory] = useState<string[]>(() => (readUser() ? [] : INVENTORY))
   const [currentFarmId, setCurrentFarmId] = useState(() => (readUser() ? '' : 'f1'))
   const [zoneByFarm, setZoneByFarm] = useState<Record<string, string>>({ f1: 'z-a', f2: 'z-2a' })
   const [pestByZone, setPestByZone] = useState(DEFAULT_PEST_BY_ZONE)
@@ -181,6 +214,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setFarms(FARMS)
       setZones(ZONES)
       setPests(PESTS)
+      setRecords(RECORDS)
+      setInventory(INVENTORY)
       setCurrentFarmId('f1')
       setReady(true)
       return
@@ -190,10 +225,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     api<ServerField[]>('/fields')
       .then(async (fields) => {
         const next = fromServer(fields)
-        const loaded = await loadPests(next.zones)
+        const [loaded, sprays, stock] = await Promise.all([
+          loadPests(next.zones),
+          loadSprays(next.zones),
+          api<number[]>('/inventory'),
+        ])
         setFarms(next.farms)
         setZones(next.zones)
         setPests(loaded)
+        setRecords(sprays)
+        setInventory(stock.map(String))
         setCurrentFarmId((id) => (next.farms.some((f) => f.id === id) ? id : (next.farms[0]?.id ?? '')))
         setReady(true)
       })
@@ -226,7 +267,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppState>(
     () => ({
-      today: TODAY,
+      today: user ? todayKst() : TODAY,
       farms,
       zones,
       records,
@@ -254,11 +295,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setZoneByFarm((m) => ({ ...m, [z.farmId]: id }))
       },
       selectPest: (id) => setPestByZone((m) => ({ ...m, [zone.id]: id })),
-      toggleInventory: (id) =>
-        setInventory((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id])),
-      addRecord: (rec) => setRecords((list) => [...list, { ...rec, id: `r${Date.now()}` }]),
-      setRecordCancelled: (id, cancelled) =>
-        setRecords((list) => list.map((x) => (x.id === id ? { ...x, cancelled } : x))),
+      toggleInventory: async (id) => {
+        const has = inventory.includes(id)
+        if (user) {
+          try {
+            await (has
+              ? api(`/inventory/${id}`, { method: 'DELETE' })
+              : api('/inventory', { method: 'POST', body: JSON.stringify({ drug_id: Number(id) }) }))
+          } catch (e) {
+            showToast({ text: (e as Error).message })
+            return false
+          }
+        }
+        setInventory((list) => (has ? list.filter((x) => x !== id) : [...list, id]))
+        return true
+      },
+      addRecord: async (rec) => {
+        if (!user) {
+          setRecords((list) => [...list, { ...rec, id: `r${Date.now()}` }])
+          return true
+        }
+        try {
+          const s = await api<ServerSpray>(`/zones/${rec.zoneId}/sprays`, {
+            method: 'POST',
+            body: JSON.stringify({
+              pesticide_id: Number(rec.drugId),
+              pest_id: rec.pestId ? Number(rec.pestId) : null,
+              sprayed_on: rec.date,
+              source: rec.manual ? 'manual' : 'app',
+              request_id: crypto.randomUUID(),
+            }),
+          })
+          setRecords((list) => [...list, toRecord(s, rec.zoneId)])
+          return true
+        } catch (e) {
+          showToast({ text: (e as Error).message })
+          return false
+        }
+      },
+      setRecordCancelled: async (id, cancelled) => {
+        const rec = records.find((x) => x.id === id)
+        if (user && rec) {
+          try {
+            await api(`/zones/${rec.zoneId}/sprays/${id}${cancelled ? '' : '/restore'}`, {
+              method: cancelled ? 'DELETE' : 'POST',
+            })
+          } catch (e) {
+            showToast({ text: (e as Error).message })
+            return false
+          }
+        }
+        setRecords((list) => list.map((x) => (x.id === id ? { ...x, cancelled } : x)))
+        return true
+      },
       updateZone: (id, patch) => setZones((list) => list.map((z) => (z.id === id ? { ...z, ...patch } : z))),
       changeCrop: (id, crop) => {
         setZones((list) => list.map((z) => (z.id === id ? { ...z, crop } : z)))

@@ -4,7 +4,7 @@ import { AppBar } from '../components/AppBar'
 import { BottomNav } from '../components/BottomNav'
 import { DrugCard, GroupChip } from '../components/DrugCard'
 import { Icon } from '../components/Icon'
-import { REGION_STATS, drugById, zoneName } from '../data/mock'
+import { REGION_STATS, drugOf, zoneName } from '../data/mock'
 import { num } from '../lib/date'
 import { eul } from '../lib/korean'
 import { groupColor, groupLabel, seasonRecords } from '../lib/verdict'
@@ -25,7 +25,7 @@ export default function Dashboard() {
   const season = seasonRecords(zone, records, today)
   const counts = new Map<string, { group: string; kind: string; n: number; names: string[] }>()
   for (const r of season) {
-    const d = drugById(r.drugId)!
+    const d = drugOf(r)!
     const key = `${d.kind}-${d.group}`
     const cur = counts.get(key) ?? { group: d.group, kind: d.kind, n: 0, names: [] }
     cur.n += 1
@@ -39,7 +39,7 @@ export default function Dashboard() {
   const heavy = total >= 3 && max / total > 0.5 ? rows[0] : undefined
 
   // 직전에 뿌린 계통. 다음에 쓸 약에서 뒤로 민다
-  const last = total ? drugById(season[total - 1].drugId) : undefined
+  const last = total ? drugOf(season[total - 1]) : undefined
   const next = verdicts
     .filter((v) => v.status === 'ok')
     .sort(

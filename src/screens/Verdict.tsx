@@ -48,9 +48,10 @@ export default function Verdict() {
   const doneToday = records.some((r) => !r.cancelled && r.date === today && r.zoneId === zone.id && r.drugId === drug.id)
   const blocked = v.status === 'no' || v.status === 'preplant'
 
-  const record = () => {
-    addRecord({ date: today, zoneId: zone.id, drugId: drug.id, pestId: pest.id })
-    showToast({ text: `${eul(drug.name)} 기록했어요`, actionLabel: '보기', actionTo: '/history' })
+  const record = async () => {
+    if (await addRecord({ date: today, zoneId: zone.id, drugId: drug.id, pestId: pest.id })) {
+      showToast({ text: `${eul(drug.name)} 기록했어요`, actionLabel: '보기', actionTo: '/history' })
+    }
   }
 
   return (
@@ -106,9 +107,10 @@ export default function Verdict() {
             type="button"
             className={`stock-btn${inStock ? ' is-on' : ''}`}
             aria-pressed={inStock}
-            onClick={() => {
-              toggleInventory(v.drug.id)
-              showToast({ text: inStock ? `${v.drug.name} 창고에서 뺐어요` : `${v.drug.name} 창고에 넣었어요` })
+            onClick={async () => {
+              if (await toggleInventory(v.drug.id)) {
+                showToast({ text: inStock ? `${v.drug.name} 창고에서 뺐어요` : `${v.drug.name} 창고에 넣었어요` })
+              }
             }}
           >
             <Icon name="package" size={20} weight={inStock ? 'fill' : 'regular'} />

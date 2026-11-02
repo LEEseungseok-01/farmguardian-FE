@@ -21,7 +21,7 @@ export function useVerdicts(zone: Zone, pest: Pest | undefined) {
     return () => {
       stale = true
     }
-  }, [user, key]) // eslint-disable-line react-hooks/exhaustive-deps -- key가 zone·pest를 대신한다
+  }, [user, key, records]) // eslint-disable-line react-hooks/exhaustive-deps -- key가 zone·pest를 대신한다. 기록이 바뀌면 횟수·계통이 달라져 다시 받는다
 
   if (!pest) return { verdicts: [] as Verdict[], loading: false, error: '' }
   if (!user) {

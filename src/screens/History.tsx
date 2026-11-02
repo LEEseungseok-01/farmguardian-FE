@@ -1,11 +1,13 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { AppBar } from '../components/AppBar'
 import { BottomNav } from '../components/BottomNav'
 import { GroupChip, RepeatChip } from '../components/DrugCard'
 import { Icon } from '../components/Icon'
 import { ProductArt } from '../components/ProductArt'
 import { Sheet } from '../components/Sheet'
-import { DRUGS, drugById, zoneName, type SprayRecord } from '../data/mock'
+import { DRUGS, drugOf, zoneName, type Drug, type SprayRecord } from '../data/mock'
+import { api } from '../lib/api'
+import { toDrug, type ServerPesticide } from '../lib/serverVerdict'
 import { fmtMD, monthOf, weekday } from '../lib/date'
 import { groupLabel } from '../lib/verdict'
 import { useApp } from '../state/AppState'
@@ -37,12 +39,12 @@ export default function History() {
 
   /** 같은 구역에서 바로 앞에 쓴 약과 계통이 같으면 true */
   const repeatsGroup = (r: SprayRecord) => {
-    const g = drugById(r.drugId)?.group
+    const g = drugOf(r)?.group
     if (!g) return false
     const prev = active.find(
       (x) => x.zoneId === r.zoneId && (x.date < r.date || (x.date === r.date && x.id < r.id)),
     )
-    return !!prev && drugById(prev.drugId)?.group === g
+    return !!prev && drugOf(prev)?.group === g
   }
 
   return (
@@ -88,7 +90,7 @@ export default function History() {
               <h2 id={`m-${m}`} className="rec-month__title">{m}월</h2>
               <ul className="rec-list">
                 {byMonth[m].map((r) => {
-                  const d = drugById(r.drugId)!
+                  const d = drugOf(r)!
                   const p = pestById(r.pestId)
                   const z = zoneOf(r.zoneId)
                   return (
@@ -118,9 +120,8 @@ export default function History() {
                           type="button"
                           className="rec__btn rec__btn--icon"
                           aria-label={`${d.name} 기록 되돌리기`}
-                          onClick={() => {
-                            setRecordCancelled(r.id, false)
-                            showToast({ text: '기록을 되돌렸어요' })
+                          onClick={async () => {
+                            if (await setRecordCancelled(r.id, false)) showToast({ text: '기록을 되돌렸어요' })
                           }}
                         >
                           <Icon name="arrow-counter-clockwise" size={22} />
@@ -155,10 +156,10 @@ export default function History() {
             <button
               type="button"
               className="btn btn--danger btn--lg"
-              onClick={() => {
-                if (confirm) setRecordCancelled(confirm.id, true)
+              onClick={async () => {
+                const ok = !confirm || (await setRecordCancelled(confirm.id, true))
                 setConfirm(null)
-                showToast({ text: '기록을 취소했어요' })
+                if (ok) showToast({ text: '기록을 취소했어요' })
               }}
             >
               취소하기
@@ -176,7 +177,7 @@ export default function History() {
               <span>{zoneName(zoneOf(confirm.zoneId))}</span>
             </p>
             <p>
-              {drugById(confirm.drugId)?.name}, {pestById(confirm.pestId)?.name}
+              {drugOf(confirm)?.name}, {pestById(confirm.pestId)?.name}
             </p>
             <p className="confirm-box__note">
               <Icon name="info" size={18} />
@@ -199,24 +200,38 @@ export default function History() {
 }
 
 function AddRecordSheet({ onClose, today, defaultZone }: { onClose: () => void; today: string; defaultZone: string }) {
-  const { farmZones, addRecord, showToast, pests } = useApp()
+  const { user, farmZones, addRecord, showToast, pests } = useApp()
   const [zoneId, setZoneId] = useState(defaultZone)
   const zone = farmZones.find((z) => z.id === zoneId) ?? farmZones[0]
   const zonePests = pests.filter((p) => p.crops.includes(zone.crop) && p.kind !== '바이러스')
   const [date, setDate] = useState(today)
   const [pestId, setPestId] = useState(zonePests[0]?.id ?? '')
   const validPest = zonePests.some((p) => p.id === pestId) ? pestId : zonePests[0]?.id ?? ''
-  const drugs = DRUGS.filter((d) => d.regs.some((x) => x.crop === zone.crop && x.pestId === validPest))
-  const others = DRUGS.filter((d) => !drugs.includes(d))
+  // 로그인했다면 이 작물·병해충에 등록된 약을 BE에서 받는다 (그 밖의 약 목록은 없다)
+  const [served, setServed] = useState<Drug[]>([])
+  useEffect(() => {
+    if (!user || !zone.cropId || !validPest) return
+    let stale = false
+    api<ServerPesticide[]>(`/pesticides?crop_id=${zone.cropId}&pest_id=${validPest}`).then(
+      (r) => !stale && setServed(r.map(toDrug)),
+      () => !stale && setServed([]),
+    )
+    return () => {
+      stale = true
+    }
+  }, [user, zone.cropId, validPest])
+  const drugs = user ? served : DRUGS.filter((d) => d.regs.some((x) => x.crop === zone.crop && x.pestId === validPest))
+  const others = user ? [] : DRUGS.filter((d) => !drugs.includes(d))
   const [drugId, setDrugId] = useState('')
-  const validDrug = DRUGS.some((d) => d.id === drugId) ? drugId : drugs[0]?.id ?? ''
+  const validDrug = [...drugs, ...others].some((d) => d.id === drugId) ? drugId : drugs[0]?.id ?? ''
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!validDrug || !validPest) return
-    addRecord({ date, zoneId: zone.id, drugId: validDrug, pestId: validPest, manual: true })
-    showToast({ text: `${fmtMD(date)} 기록을 추가했어요` })
-    onClose()
+    if (await addRecord({ date, zoneId: zone.id, drugId: validDrug, pestId: validPest, manual: true })) {
+      showToast({ text: `${fmtMD(date)} 기록을 추가했어요` })
+      onClose()
+    }
   }
 
   return (
@@ -274,11 +289,13 @@ function AddRecordSheet({ onClose, today, defaultZone }: { onClose: () => void; 
                 <option key={d.id} value={d.id}>{d.name} {d.form} (그룹 {groupLabel(d.group)})</option>
               ))}
             </optgroup>
-            <optgroup label="그 밖의 약">
-              {others.map((d) => (
-                <option key={d.id} value={d.id}>{d.name} {d.form} (그룹 {groupLabel(d.group)})</option>
-              ))}
-            </optgroup>
+            {others.length > 0 && (
+              <optgroup label="그 밖의 약">
+                {others.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name} {d.form} (그룹 {groupLabel(d.group)})</option>
+                ))}
+              </optgroup>
+            )}
           </select>
         </label>
       </form>

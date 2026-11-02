@@ -96,6 +96,8 @@ export type SprayRecord = {
   pestId: string
   cancelled?: boolean
   manual?: boolean
+  /** BE 기록은 약 정보를 같이 들고 온다. 예시 기록은 drugId로 찾는다 */
+  drug?: Drug
 }
 
 export const FARMS: Farm[] = [
@@ -383,5 +385,6 @@ export const ADDRESS_BOOK = [
 ]
 
 export const drugById = (id: string) => DRUGS.find((d) => d.id === id)
+export const drugOf = (r: SprayRecord) => r.drug ?? drugById(r.drugId)
 export const pestById = (id: string) => PESTS.find((p) => p.id === id)
 export const zoneName = (z: Pick<Zone, 'name'>) => z.name
