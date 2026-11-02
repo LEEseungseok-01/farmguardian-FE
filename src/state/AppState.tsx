@@ -1,12 +1,63 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   DEFAULT_PEST_BY_ZONE, FARMS, INVENTORY, PESTS, RECORDS, TODAY, ZONES,
   type Crop, type Farm, type Pest, type Point, type SprayRecord, type Zone,
 } from '../data/mock'
+import { api } from '../lib/api'
+import { pointsOf } from '../lib/geo'
 
 type Toast = { id: number; text: string; actionLabel?: string; actionTo?: string }
 
 type User = { id: number; username: string }
+
+type ServerField = {
+  id: number
+  name: string
+  address: string | null
+  zones: {
+    id: number
+    name: string
+    crop: { name: string }
+    planted_at: string | null
+    harvest_at: string | null
+    area_m2: number
+    geometry: { coordinates: [number, number][][][] }
+  }[]
+}
+
+// 새로고침해도 로그인이 풀리지 않게 남겨 둔다. 사파리 비공개 모드에서는 던지므로 감싼다
+const readUser = (): User | null => {
+  try {
+    return JSON.parse(localStorage.getItem('fg.user') ?? 'null')
+  } catch {
+    return null
+  }
+}
+
+const NO_FARM: Farm = { id: '', name: '', address: '', region: '' }
+
+/** BE의 밭·구역을 화면이 쓰는 모양으로 바꾼다. 읍·면·동은 주소에서 뽑는다 */
+function fromServer(fields: ServerField[]) {
+  const farms: Farm[] = fields.map((f) => ({
+    id: String(f.id),
+    name: f.name,
+    address: f.address ?? '',
+    region: f.address?.split(' ').find((w) => /[면읍동]$/.test(w)) ?? '',
+  }))
+  const zones: Zone[] = fields.flatMap((f) =>
+    f.zones.map((z) => ({
+      id: String(z.id),
+      farmId: String(f.id),
+      name: z.name,
+      crop: z.crop.name as Crop,
+      plantedAt: z.planted_at,
+      harvestAt: z.harvest_at,
+      areaM2: z.area_m2,
+      points: pointsOf(z.geometry),
+    })),
+  )
+  return { farms, zones }
+}
 
 type AppState = {
   today: string
@@ -15,6 +66,12 @@ type AppState = {
   signedIn: boolean
   signIn: (user: User) => void
   signOut: () => void
+  /** 로그인했다면 밭·구역을 서버에서 다 받았는지 */
+  ready: boolean
+  loadError: string
+  reload: () => void
+  /** 구역이 아직 없는 밭 (가입 직후). 있으면 구역부터 나눠야 한다 */
+  unzoned: Farm | undefined
   farms: Farm[]
   zones: Zone[]
   records: SprayRecord[]
@@ -52,21 +109,16 @@ const Ctx = createContext<AppState | null>(null)
 const firstPestFor = (crop: Crop) => PESTS.find((p) => p.crops.includes(crop) && p.kind !== '바이러스')
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [farms, setFarms] = useState(FARMS)
-  const [zones, setZones] = useState(ZONES)
+  const [farms, setFarms] = useState<Farm[]>(() => (readUser() ? [] : FARMS))
+  const [zones, setZones] = useState<Zone[]>(() => (readUser() ? [] : ZONES))
   const [records, setRecords] = useState(RECORDS)
   const [inventory, setInventory] = useState<string[]>(INVENTORY)
-  const [currentFarmId, setCurrentFarmId] = useState('f1')
+  const [currentFarmId, setCurrentFarmId] = useState(() => (readUser() ? '' : 'f1'))
   const [zoneByFarm, setZoneByFarm] = useState<Record<string, string>>({ f1: 'z-a', f2: 'z-2a' })
   const [pestByZone, setPestByZone] = useState(DEFAULT_PEST_BY_ZONE)
-  // 새로고침해도 로그인이 풀리지 않게 남겨 둔다. 사파리 비공개 모드에서는 던지므로 감싼다
-  const [user, setUser] = useState<User | null>(() => {
-    try {
-      return JSON.parse(localStorage.getItem('fg.user') ?? 'null')
-    } catch {
-      return null
-    }
-  })
+  const [user, setUser] = useState<User | null>(readUser)
+  const [ready, setReady] = useState(user === null)
+  const [loadError, setLoadError] = useState('')
   const setAuth = useCallback((u: User | null) => {
     setUser(u)
     try {
@@ -79,9 +131,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<Toast | null>(null)
   const timer = useRef<number>(0)
 
-  const currentFarm = farms.find((f) => f.id === currentFarmId) ?? farms[0]
+  // 로그인하면 밭·구역은 서버 것이다. 로그아웃하면 다시 예시 데이터로 돌아간다
+  const reload = useCallback(() => {
+    if (!user) {
+      setFarms(FARMS)
+      setZones(ZONES)
+      setCurrentFarmId('f1')
+      setReady(true)
+      return
+    }
+    setReady(false)
+    setLoadError('')
+    api<ServerField[]>('/fields')
+      .then((fields) => {
+        const next = fromServer(fields)
+        setFarms(next.farms)
+        setZones(next.zones)
+        setCurrentFarmId((id) => (next.farms.some((f) => f.id === id) ? id : (next.farms[0]?.id ?? '')))
+        setReady(true)
+      })
+      .catch((e: Error) => setLoadError(e.message))
+  }, [user])
+  useEffect(reload, [reload])
+
+  // ready 전에는 화면이 그려지지 않으므로, 밭이나 구역이 비어 있어도 아래 값을 쓰는 곳은 없다
+  const currentFarm = farms.find((f) => f.id === currentFarmId) ?? farms[0] ?? NO_FARM
   const farmZones = zones.filter((z) => z.farmId === currentFarm.id)
   const zone = farmZones.find((z) => z.id === zoneByFarm[currentFarm.id]) ?? farmZones[0]
+  const unzoned = farms.find((f) => !zones.some((z) => z.farmId === f.id))
 
   const pestOf = useCallback(
     (z: Zone) => {
@@ -108,10 +185,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       signedIn: user !== null,
       signIn: setAuth,
       signOut: () => setAuth(null),
+      ready,
+      loadError,
+      reload,
+      unzoned,
       currentFarm,
       farmZones,
       zone,
-      pest: pestOf(zone),
+      pest: zone ? pestOf(zone) : undefined,
       pestOf,
       setCurrentFarm: setCurrentFarmId,
       selectZone: (id) => {
@@ -155,7 +236,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toast,
       showToast,
     }),
-    [farms, zones, records, inventory, user, setAuth, currentFarm, farmZones, zone, pestOf, toast, showToast],
+    [farms, zones, records, inventory, user, setAuth, ready, loadError, reload, unzoned, currentFarm, farmZones, zone, pestOf, toast, showToast],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

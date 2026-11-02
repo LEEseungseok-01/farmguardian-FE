@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Zone } from '../data/mock'
 import { api } from '../lib/api'
+import { pointsOf } from '../lib/geo'
 import { num } from '../lib/date'
 import { useApp } from '../state/AppState'
 import { FieldMap } from './FieldMap'
@@ -19,8 +20,7 @@ type Parcel = {
   geometry: { coordinates: [number, number][][][] }
 }
 
-// 지도 그림은 구역(Zone) 모양을 받는다. SVG는 y가 아래로 늘어나서 북쪽이 위로 가게 뒤집고,
-// 여러 덩어리인 필지는 첫 덩어리의 바깥 테두리만 그린다
+// 지도 그림은 구역(Zone) 모양을 받는다
 const toZone = (p: Parcel): Zone => ({
   id: p.farmmap_id,
   farmId: 'signup',
@@ -29,7 +29,7 @@ const toZone = (p: Parcel): Zone => ({
   plantedAt: null,
   harvestAt: null,
   areaM2: p.area_m2,
-  points: p.geometry.coordinates[0][0].map(([x, y]) => [x, -y]),
+  points: pointsOf(p.geometry),
 })
 
 // 아래 규칙은 BE(identity·farm 스키마)와 같다. 서버가 거르기 전에 알려 주려는 것
