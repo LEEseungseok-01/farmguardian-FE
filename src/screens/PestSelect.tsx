@@ -1,11 +1,12 @@
-import { useMemo, useState, type ReactElement } from 'react'
+import { useEffect, useMemo, useState, type ReactElement } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppBar } from '../components/AppBar'
 import { BottomNav } from '../components/BottomNav'
 import { CustomIcon, Icon } from '../components/Icon'
 import { MonthBar, PestPhoto, SEASON_TEXT, seasonLevel } from '../components/PestBits'
 import { Sheet } from '../components/Sheet'
-import { PESTS, pestById, zoneName, type Part, type Pest } from '../data/mock'
+import { zoneName, type Part, type Pest } from '../data/mock'
+import { api } from '../lib/api'
 import { monthOf } from '../lib/date'
 import { josa } from '../lib/korean'
 import { registeredDrugs } from '../lib/verdict'
@@ -22,22 +23,37 @@ const PARTS: { key: Part; icon: ReactElement }[] = [
 
 export default function PestSelect() {
   const navigate = useNavigate()
-  const { zone, pest: current, selectPest, today } = useApp()
+  const { user, zone, pests, pestById, pest: current, selectPest, today } = useApp()
   const [part, setPart] = useState<Part | null>(null)
   const [q, setQ] = useState('')
   const [info, setInfo] = useState<Pest | null>(null)
   const month = monthOf(today)
 
+  // 로그인했다면 부위별 후보는 BE가 거른다. 받아 오기 전에는 거르지 않는다
+  const [partIds, setPartIds] = useState<Set<string> | null>(null)
+  useEffect(() => {
+    setPartIds(null)
+    if (!user || !part || !zone.cropId) return
+    let stale = false
+    api<{ id: number }[]>(`/pests/candidates?crop_id=${zone.cropId}&part=${encodeURIComponent(part)}`).then(
+      (r) => !stale && setPartIds(new Set(r.map((p) => String(p.id)))),
+      () => {},
+    )
+    return () => {
+      stale = true
+    }
+  }, [user, part, zone.cropId])
+
   const list = useMemo(() => {
     const query = q.trim()
-    return PESTS.filter((p) => p.crops.includes(zone.crop))
-      .filter((p) => !part || p.parts.includes(part))
+    return pests.filter((p) => p.crops.includes(zone.crop))
+      .filter((p) => !part || (user ? (partIds?.has(p.id) ?? true) : p.parts.includes(part)))
       .filter((p) => !query || p.name.includes(query))
       .sort((a, b) => {
         const rank = { high: 0, mid: 1, low: 2 }
         return rank[seasonLevel(a, month)] - rank[seasonLevel(b, month)]
       })
-  }, [zone.crop, part, q, month])
+  }, [pests, user, zone.crop, part, partIds, q, month])
 
   const choose = (p: Pest) => {
     if (p.kind === '바이러스' || p.carries) {
@@ -117,7 +133,7 @@ export default function PestSelect() {
           <ul className="pest-list">
             {list.map((p) => {
               const lv = seasonLevel(p, month)
-              const count = registeredDrugs(zone, p).length
+              const count = p.drugCount ?? registeredDrugs(zone, p).length
               const on = p.id === current?.id
               return (
                 <li key={p.id}>
@@ -155,13 +171,23 @@ export default function PestSelect() {
         )}
       </div>
 
-      <VirusSheet pest={info} onClose={() => setInfo(null)} onGo={goDrugs} />
+      <VirusSheet pest={info} pestById={pestById} onClose={() => setInfo(null)} onGo={goDrugs} />
       <BottomNav />
     </div>
   )
 }
 
-function VirusSheet({ pest, onClose, onGo }: { pest: Pest | null; onClose: () => void; onGo: (id: string) => void }) {
+function VirusSheet({
+  pest,
+  pestById,
+  onClose,
+  onGo,
+}: {
+  pest: Pest | null
+  pestById: (id: string) => Pest | undefined
+  onClose: () => void
+  onGo: (id: string) => void
+}) {
   if (!pest) return null
   const isVirus = pest.kind === '바이러스'
   const carrier = isVirus && pest.carrier ? pestById(pest.carrier) : undefined

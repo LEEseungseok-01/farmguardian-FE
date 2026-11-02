@@ -37,6 +37,8 @@ export type Zone = {
   /** 농가가 직접 붙인 구역 이름 */
   name: string
   crop: Crop
+  /** BE의 작물 번호. 예시 데이터에는 없다 */
+  cropId?: number
   plantedAt: string | null
   plannedAt?: string
   harvestAt: string | null
@@ -58,6 +60,8 @@ export type Pest = {
   carries?: string
   /** 바이러스병일 때 옮기는 벌레 */
   carrier?: string
+  /** 이 작물에 등록된 약 수. BE가 알려 준다 (예시 데이터는 직접 센다) */
+  drugCount?: number
 }
 
 export type Registration = {

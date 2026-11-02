@@ -5,7 +5,7 @@ import { GroupChip, RepeatChip } from '../components/DrugCard'
 import { Icon } from '../components/Icon'
 import { ProductArt } from '../components/ProductArt'
 import { Sheet } from '../components/Sheet'
-import { DRUGS, PESTS, drugById, pestById, zoneName, type SprayRecord } from '../data/mock'
+import { DRUGS, drugById, zoneName, type SprayRecord } from '../data/mock'
 import { fmtMD, monthOf, weekday } from '../lib/date'
 import { groupLabel } from '../lib/verdict'
 import { useApp } from '../state/AppState'
@@ -13,7 +13,7 @@ import './History.css'
 import { EmptyArt } from '../components/EmptyArt'
 
 export default function History() {
-  const { records, farmZones, zones, setRecordCancelled, today, showToast, zone: currentZone } = useApp()
+  const { records, farmZones, zones, setRecordCancelled, today, showToast, zone: currentZone, pestById } = useApp()
   const [filter, setFilter] = useState<string>('all')
   const [confirm, setConfirm] = useState<SprayRecord | null>(null)
   const [adding, setAdding] = useState(false)
@@ -199,13 +199,13 @@ export default function History() {
 }
 
 function AddRecordSheet({ onClose, today, defaultZone }: { onClose: () => void; today: string; defaultZone: string }) {
-  const { farmZones, addRecord, showToast } = useApp()
+  const { farmZones, addRecord, showToast, pests } = useApp()
   const [zoneId, setZoneId] = useState(defaultZone)
   const zone = farmZones.find((z) => z.id === zoneId) ?? farmZones[0]
-  const pests = PESTS.filter((p) => p.crops.includes(zone.crop) && p.kind !== '바이러스')
+  const zonePests = pests.filter((p) => p.crops.includes(zone.crop) && p.kind !== '바이러스')
   const [date, setDate] = useState(today)
-  const [pestId, setPestId] = useState(pests[0]?.id ?? '')
-  const validPest = pests.some((p) => p.id === pestId) ? pestId : pests[0]?.id ?? ''
+  const [pestId, setPestId] = useState(zonePests[0]?.id ?? '')
+  const validPest = zonePests.some((p) => p.id === pestId) ? pestId : zonePests[0]?.id ?? ''
   const drugs = DRUGS.filter((d) => d.regs.some((x) => x.crop === zone.crop && x.pestId === validPest))
   const others = DRUGS.filter((d) => !drugs.includes(d))
   const [drugId, setDrugId] = useState('')
@@ -260,7 +260,7 @@ function AddRecordSheet({ onClose, today, defaultZone }: { onClose: () => void; 
         <label className="field">
           <span className="field__label">병해충</span>
           <select className="input" value={validPest} onChange={(e) => setPestId(e.target.value)}>
-            {pests.map((p) => (
+            {zonePests.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>

@@ -17,12 +17,25 @@ type ServerField = {
   zones: {
     id: number
     name: string
-    crop: { name: string }
+    crop: { id: number; name: string }
     planted_at: string | null
     harvest_at: string | null
     area_m2: number
     geometry: { coordinates: [number, number][][][] }
   }[]
+}
+
+type ServerPest = {
+  id: number
+  name: string
+  kind: string | null
+  photo_url: string | null
+  description: string | null
+  months: number[]
+  pesticide_count: number
+  is_virus: boolean
+  carries: { name: string }[]
+  vectors: { id: number }[]
 }
 
 // 새로고침해도 로그인이 풀리지 않게 남겨 둔다. 사파리 비공개 모드에서는 던지므로 감싼다
@@ -35,6 +48,35 @@ const readUser = (): User | null => {
 }
 
 const NO_FARM: Farm = { id: '', name: '', address: '', region: '' }
+
+const toPest = (p: ServerPest, crop: Crop): Pest => ({
+  id: String(p.id),
+  name: p.name,
+  kind: p.is_virus ? '바이러스' : p.kind === '병' ? '병' : '벌레',
+  crops: [crop],
+  parts: [], // 부위는 /pests/candidates로 따로 거른다
+  months: p.months,
+  peak: [], // BE에는 많이 생기는 달 구분이 없다
+  photo: p.photo_url ?? '',
+  hint: p.description ?? '',
+  carries: p.carries.map((c) => c.name).join(', ') || undefined,
+  carrier: p.vectors[0] ? String(p.vectors[0].id) : undefined,
+  drugCount: p.pesticide_count,
+})
+
+/** 구역에 심은 작물마다 병해충을 받아 와서, 여러 작물에 나오는 병해충은 하나로 합친다 */
+async function loadPests(zones: Zone[]): Promise<Pest[]> {
+  const crops = [...new Map(zones.map((z) => [z.cropId, z.crop])).entries()]
+  const lists = await Promise.all(
+    crops.map(async ([id, crop]) => (await api<ServerPest[]>(`/pests?crop_id=${id}`)).map((p) => toPest(p, crop))),
+  )
+  const merged = new Map<string, Pest>()
+  for (const p of lists.flat()) {
+    const have = merged.get(p.id)
+    merged.set(p.id, have ? { ...have, crops: [...have.crops, ...p.crops] } : p)
+  }
+  return [...merged.values()]
+}
 
 /** BE의 밭·구역을 화면이 쓰는 모양으로 바꾼다. 읍·면·동은 주소에서 뽑는다 */
 function fromServer(fields: ServerField[]) {
@@ -50,6 +92,7 @@ function fromServer(fields: ServerField[]) {
       farmId: String(f.id),
       name: z.name,
       crop: z.crop.name as Crop,
+      cropId: z.crop.id,
       plantedAt: z.planted_at,
       harvestAt: z.harvest_at,
       areaM2: z.area_m2,
@@ -72,6 +115,8 @@ type AppState = {
   reload: () => void
   /** 구역이 아직 없는 밭 (가입 직후). 있으면 구역부터 나눠야 한다 */
   unzoned: Farm | undefined
+  pests: Pest[]
+  pestById: (id: string) => Pest | undefined
   farms: Farm[]
   zones: Zone[]
   records: SprayRecord[]
@@ -106,11 +151,10 @@ type AppState = {
 
 const Ctx = createContext<AppState | null>(null)
 
-const firstPestFor = (crop: Crop) => PESTS.find((p) => p.crops.includes(crop) && p.kind !== '바이러스')
-
 export function AppProvider({ children }: { children: ReactNode }) {
   const [farms, setFarms] = useState<Farm[]>(() => (readUser() ? [] : FARMS))
   const [zones, setZones] = useState<Zone[]>(() => (readUser() ? [] : ZONES))
+  const [pests, setPests] = useState<Pest[]>(() => (readUser() ? [] : PESTS))
   const [records, setRecords] = useState(RECORDS)
   const [inventory, setInventory] = useState<string[]>(INVENTORY)
   const [currentFarmId, setCurrentFarmId] = useState(() => (readUser() ? '' : 'f1'))
@@ -136,6 +180,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) {
       setFarms(FARMS)
       setZones(ZONES)
+      setPests(PESTS)
       setCurrentFarmId('f1')
       setReady(true)
       return
@@ -143,10 +188,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setReady(false)
     setLoadError('')
     api<ServerField[]>('/fields')
-      .then((fields) => {
+      .then(async (fields) => {
         const next = fromServer(fields)
+        const loaded = await loadPests(next.zones)
         setFarms(next.farms)
         setZones(next.zones)
+        setPests(loaded)
         setCurrentFarmId((id) => (next.farms.some((f) => f.id === id) ? id : (next.farms[0]?.id ?? '')))
         setReady(true)
       })
@@ -160,12 +207,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const zone = farmZones.find((z) => z.id === zoneByFarm[currentFarm.id]) ?? farmZones[0]
   const unzoned = farms.find((f) => !zones.some((z) => z.farmId === f.id))
 
+  const pestById = useCallback((id: string) => pests.find((p) => p.id === id), [pests])
   const pestOf = useCallback(
     (z: Zone) => {
-      const p = PESTS.find((x) => x.id === pestByZone[z.id])
-      return p && p.crops.includes(z.crop) ? p : firstPestFor(z.crop)
+      const p = pestById(pestByZone[z.id])
+      return p && p.crops.includes(z.crop)
+        ? p
+        : pests.find((x) => x.crops.includes(z.crop) && x.kind !== '바이러스')
     },
-    [pestByZone],
+    [pestByZone, pestById, pests],
   )
 
   const showToast = useCallback((t: Omit<Toast, 'id'>) => {
@@ -193,6 +243,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       farmZones,
       zone,
       pest: zone ? pestOf(zone) : undefined,
+      pests,
+      pestById,
       pestOf,
       setCurrentFarm: setCurrentFarmId,
       selectZone: (id) => {
@@ -236,7 +288,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toast,
       showToast,
     }),
-    [farms, zones, records, inventory, user, setAuth, ready, loadError, reload, unzoned, currentFarm, farmZones, zone, pestOf, toast, showToast],
+    [farms, zones, pests, pestById, records, inventory, user, setAuth, ready, loadError, reload, unzoned, currentFarm, farmZones, zone, pestOf, toast, showToast],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
