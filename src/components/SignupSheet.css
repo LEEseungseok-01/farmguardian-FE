@@ -1,0 +1,12 @@
+.signup-error {
+  color: var(--no-fg);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.addr input[type='checkbox'] {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  accent-color: var(--accent);
+}

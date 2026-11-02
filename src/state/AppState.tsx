@@ -6,11 +6,14 @@ import {
 
 type Toast = { id: number; text: string; actionLabel?: string; actionTo?: string }
 
+type User = { id: number; username: string }
+
 type AppState = {
   today: string
-  /** 카카오로 들어왔는지. 둘러보기로 들어오면 false */
+  /** 가입한 사용자. 둘러보기로 들어오면 null. id는 BE 호출 때 X-User-Id 헤더로 쓴다 */
+  user: User | null
   signedIn: boolean
-  signIn: () => void
+  signIn: (user: User) => void
   signOut: () => void
   farms: Farm[]
   zones: Zone[]
@@ -57,17 +60,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [zoneByFarm, setZoneByFarm] = useState<Record<string, string>>({ f1: 'z-a', f2: 'z-2a' })
   const [pestByZone, setPestByZone] = useState(DEFAULT_PEST_BY_ZONE)
   // 새로고침해도 로그인이 풀리지 않게 남겨 둔다. 사파리 비공개 모드에서는 던지므로 감싼다
-  const [signedIn, setSignedIn] = useState(() => {
+  const [user, setUser] = useState<User | null>(() => {
     try {
-      return localStorage.getItem('fg.signedIn') === '1'
+      return JSON.parse(localStorage.getItem('fg.user') ?? 'null')
     } catch {
-      return false
+      return null
     }
   })
-  const setAuth = useCallback((on: boolean) => {
-    setSignedIn(on)
+  const setAuth = useCallback((u: User | null) => {
+    setUser(u)
     try {
-      localStorage.setItem('fg.signedIn', on ? '1' : '0')
+      if (u) localStorage.setItem('fg.user', JSON.stringify(u))
+      else localStorage.removeItem('fg.user')
     } catch {
       /* 저장 못 해도 이번 세션은 돌아간다 */
     }
@@ -100,9 +104,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       zones,
       records,
       inventory,
-      signedIn,
-      signIn: () => setAuth(true),
-      signOut: () => setAuth(false),
+      user,
+      signedIn: user !== null,
+      signIn: setAuth,
+      signOut: () => setAuth(null),
       currentFarm,
       farmZones,
       zone,
@@ -150,7 +155,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toast,
       showToast,
     }),
-    [farms, zones, records, inventory, signedIn, setAuth, currentFarm, farmZones, zone, pestOf, toast, showToast],
+    [farms, zones, records, inventory, user, setAuth, currentFarm, farmZones, zone, pestOf, toast, showToast],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

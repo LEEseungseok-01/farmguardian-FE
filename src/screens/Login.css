@@ -27,11 +27,6 @@
   color: var(--accent-text);
 }
 
-.login__lead {
-  font-size: var(--fs-lg);
-  color: var(--text-2);
-}
-
 .login__steps {
   list-style: none;
   margin: 0;

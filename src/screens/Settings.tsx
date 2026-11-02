@@ -28,13 +28,13 @@ const SOURCES = [
 ]
 
 const PRIVACY = [
-  { name: '카카오 계정 식별자', how: '회원 식별과 로그인 유지' },
+  { name: '아이디와 비밀번호', how: '회원 식별과 로그인 유지' },
   { name: '밭 위치와 구역 정보', how: '구역별 판정과 이력 관리' },
   { name: '살포 이력', how: '사용 횟수와 작용기작 반복 집계' },
 ]
 
 export default function Settings() {
-  const { signedIn, signOut, farms, zones, showToast } = useApp()
+  const { user, signedIn, signOut, farms, zones, showToast } = useApp()
   const navigate = useNavigate()
 
   return (
@@ -47,7 +47,7 @@ export default function Settings() {
           <div className="set-card">
             <p className="set-card__state">
               <Icon name={signedIn ? 'check-circle' : 'info'} weight={signedIn ? 'fill' : 'regular'} size={22} />
-              {signedIn ? '카카오로 로그인했어요' : '로그인하지 않고 둘러보는 중이에요'}
+              {user ? `${user.username} 계정으로 로그인했어요` : '로그인하지 않고 둘러보는 중이에요'}
             </p>
             <p className="set-card__hint">
               {signedIn
@@ -67,8 +67,8 @@ export default function Settings() {
                 로그아웃
               </button>
             ) : (
-              <button type="button" className="btn btn--kakao" onClick={() => navigate('/')}>
-                카카오로 로그인
+              <button type="button" className="btn btn--primary" onClick={() => navigate('/')}>
+                회원가입
               </button>
             )}
           </div>
