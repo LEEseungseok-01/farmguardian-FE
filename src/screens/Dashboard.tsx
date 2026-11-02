@@ -7,7 +7,8 @@ import { Icon } from '../components/Icon'
 import { REGION_STATS, drugById, zoneName } from '../data/mock'
 import { num } from '../lib/date'
 import { eul } from '../lib/korean'
-import { evaluate, groupColor, groupLabel, registeredDrugs, seasonRecords } from '../lib/verdict'
+import { groupColor, groupLabel, seasonRecords } from '../lib/verdict'
+import { useVerdicts } from '../lib/useVerdicts'
 import { useApp } from '../state/AppState'
 import './Dashboard.css'
 import { EmptyArt } from '../components/EmptyArt'
@@ -18,6 +19,7 @@ export default function Dashboard() {
   const { farms, zones, currentFarm, setCurrentFarm, farmZones, zone, selectZone, records, today, pestOf, inventory } = useApp()
   const [pickFarm, setPickFarm] = useState(false)
   const pest = pestOf(zone)
+  const { verdicts } = useVerdicts(zone, pest)
 
   // 이 구역 이번 농사에 계통을 몇 번씩 썼나. 농가가 아는 건 번호가 아니라 약 이름이라 같이 모은다
   const season = seasonRecords(zone, records, today)
@@ -38,17 +40,14 @@ export default function Dashboard() {
 
   // 직전에 뿌린 계통. 다음에 쓸 약에서 뒤로 민다
   const last = total ? drugById(season[total - 1].drugId) : undefined
-  const next = pest
-    ? registeredDrugs(zone, pest)
-        .map((d) => evaluate(d, zone, pest, records, today))
-        .filter((v) => v.status === 'ok')
-        .sort(
-          (a, b) =>
-            Number(a.drug.group === last?.group) - Number(b.drug.group === last?.group) ||
-            Number(inventory.includes(b.drug.id)) - Number(inventory.includes(a.drug.id)),
-        )
-        .slice(0, 2)
-    : []
+  const next = verdicts
+    .filter((v) => v.status === 'ok')
+    .sort(
+      (a, b) =>
+        Number(a.drug.group === last?.group) - Number(b.drug.group === last?.group) ||
+        Number(inventory.includes(b.drug.id)) - Number(inventory.includes(a.drug.id)),
+    )
+    .slice(0, 2)
 
   // 내 면에서 가장 많이 쓰는 계통. 내가 쓴 것과 겹치면 저항성이 넘어온다
   const county = currentFarm.address.split(' ').find((w) => /[군시]$/.test(w)) ?? ''

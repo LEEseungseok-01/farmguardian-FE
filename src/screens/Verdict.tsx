@@ -7,16 +7,19 @@ import { StatusBadge } from '../components/StatusBadge'
 import { DATA_SOURCE, drugById, zoneName } from '../data/mock'
 import { fmtFull } from '../lib/date'
 import { eul } from '../lib/korean'
-import { STATUS_META, alternatives, evaluate, type Check } from '../lib/verdict'
+import { STATUS_META, alternatives, evaluate, pickAlternatives, type Check } from '../lib/verdict'
+import { useVerdicts } from '../lib/useVerdicts'
 import { useApp } from '../state/AppState'
 import './Verdict.css'
 
 export default function Verdict() {
   const { drugId = '' } = useParams()
   const navigate = useNavigate()
-  const { zone, pestOf, records, today, addRecord, showToast, inventory, toggleInventory } = useApp()
-  const drug = drugById(drugId)
+  const { user, zone, pestOf, records, today, addRecord, showToast, inventory, toggleInventory } = useApp()
   const pest = pestOf(zone)
+  const { verdicts, loading } = useVerdicts(zone, pest)
+  // 로그인했으면 서버가 이 병해충에 등록된 약만 판정해 준다. 아니면 예시 약을 직접 따진다
+  const drug = user ? verdicts.find((x) => x.drug.id === drugId)?.drug : drugById(drugId)
 
   if (!drug || !pest) {
     return (
@@ -25,7 +28,7 @@ export default function Verdict() {
         <div className="page__body">
           <div className="empty">
             <Icon name="question" size={32} />
-            <p>{drug ? `아직 ${zone.crop} 병해충 자료가 없어요` : '약을 찾을 수 없어요'}</p>
+            <p>{loading ? '판정을 불러오는 중이에요' : drug ? `아직 ${zone.crop} 병해충 자료가 없어요` : '약을 찾을 수 없어요'}</p>
             <Link to="/drugs" className="btn btn--soft">약 목록 보기</Link>
           </div>
         </div>
@@ -33,10 +36,15 @@ export default function Verdict() {
     )
   }
 
-  const v = evaluate(drug, zone, pest, records, today)
+  const v = user ? verdicts.find((x) => x.drug.id === drugId)! : evaluate(drug, zone, pest, records, today)
   const meta = STATUS_META[v.status]
   const inStock = inventory.includes(v.drug.id)
-  const alts = v.status === 'no' || v.status === 'unknown' ? alternatives(v, zone, pest, records, today) : []
+  const alts =
+    v.status === 'no' || v.status === 'unknown'
+      ? user
+        ? pickAlternatives(v, verdicts)
+        : alternatives(v, zone, pest, records, today)
+      : []
   const doneToday = records.some((r) => !r.cancelled && r.date === today && r.zoneId === zone.id && r.drugId === drug.id)
   const blocked = v.status === 'no' || v.status === 'preplant'
 

@@ -6,17 +6,17 @@ import { DrugCard } from '../components/DrugCard'
 import { Icon } from '../components/Icon'
 import { PestPhoto } from '../components/PestBits'
 import { zoneName } from '../data/mock'
-import { LIST_ORDER, STATUS_META, evaluate, registeredDrugs, sortVerdicts, type Status } from '../lib/verdict'
+import { LIST_ORDER, STATUS_META, sortVerdicts, type Status } from '../lib/verdict'
+import { useVerdicts } from '../lib/useVerdicts'
 import { useApp } from '../state/AppState'
 import './DrugList.css'
 import { EmptyArt } from '../components/EmptyArt'
 
 export default function DrugList() {
-  const { zone, farmZones, selectZone, pestOf, records, today, inventory } = useApp()
+  const { zone, farmZones, selectZone, pestOf, inventory } = useApp()
   const pest = pestOf(zone)
-  const verdicts = pest
-    ? sortVerdicts(registeredDrugs(zone, pest).map((d) => evaluate(d, zone, pest, records, today)))
-    : []
+  const { verdicts: found, loading, error } = useVerdicts(zone, pest)
+  const verdicts = sortVerdicts(found)
   const groups = LIST_ORDER.map((s) => ({ status: s, items: verdicts.filter((v) => v.status === s) })).filter(
     (g) => g.items.length > 0,
   )
@@ -85,13 +85,18 @@ export default function DrugList() {
           <div className="empty">
             <EmptyArt kind="drug" />
             <p>
-              {pest ? `${zone.crop} ${pest.name}에 등록된 약이 없어요` : `아직 ${zone.crop} 병해충 자료가 없어요`}
+              {loading
+                ? '약을 불러오는 중이에요'
+                : error ||
+                  (pest ? `${zone.crop} ${pest.name}에 등록된 약이 없어요` : `아직 ${zone.crop} 병해충 자료가 없어요`)}
             </p>
-            <p className="empty__hint">
-              {pest?.kind === '바이러스'
-                ? '바이러스병은 약으로 못 고쳐요. 옮기는 벌레를 먼저 막아 주세요.'
-                : '가까운 농업기술센터에 물어보세요.'}
-            </p>
+            {!loading && !error && (
+              <p className="empty__hint">
+                {pest?.kind === '바이러스'
+                  ? '바이러스병은 약으로 못 고쳐요. 옮기는 벌레를 먼저 막아 주세요.'
+                  : '가까운 농업기술센터에 물어보세요.'}
+              </p>
+            )}
           </div>
         ) : (
           shown.map((g) => (

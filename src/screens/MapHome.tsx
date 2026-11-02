@@ -8,7 +8,8 @@ import { ProductArt } from '../components/ProductArt'
 import { StatusBadge } from '../components/StatusBadge'
 import { WEATHER, zoneName, type Zone } from '../data/mock'
 import { diffDays, fmtMDnum, num, toPyeong } from '../lib/date'
-import { LIST_ORDER, evaluate, registeredDrugs, seasonRecords } from '../lib/verdict'
+import { LIST_ORDER, seasonRecords, type Verdict } from '../lib/verdict'
+import { useVerdicts } from '../lib/useVerdicts'
 import { useApp } from '../state/AppState'
 import './MapHome.css'
 
@@ -18,6 +19,7 @@ export default function MapHome() {
   const navigate = useNavigate()
   const { currentFarm, farmZones, zone, selectZone, records, inventory, today, pestOf } = useApp()
   const pest = pestOf(zone)
+  const { verdicts } = useVerdicts(zone, pest)
   const [sheet, setSheet] = useState<SheetState>('min')
   const topRef = useRef<HTMLDivElement>(null)
   const sheetRef = useRef<HTMLElement>(null)
@@ -113,19 +115,14 @@ export default function MapHome() {
         zone={zone}
         today={today}
         recordCount={seasonRecords(zone, records, today).length}
-        cards={
-          pest
-            ? registeredDrugs(zone, pest)
-                .map((d) => evaluate(d, zone, pest, records, today))
-                .sort(
-                  (a, b) =>
-                    LIST_ORDER.indexOf(a.status) - LIST_ORDER.indexOf(b.status) ||
-                    Number(inventory.includes(b.drug.id)) - Number(inventory.includes(a.drug.id)) ||
-                    a.drug.name.localeCompare(b.drug.name, 'ko'),
-                )
-                .slice(0, 3)
-            : []
-        }
+        cards={[...verdicts]
+          .sort(
+            (a, b) =>
+              LIST_ORDER.indexOf(a.status) - LIST_ORDER.indexOf(b.status) ||
+              Number(inventory.includes(b.drug.id)) - Number(inventory.includes(a.drug.id)) ||
+              a.drug.name.localeCompare(b.drug.name, 'ko'),
+          )
+          .slice(0, 3)}
         inventory={inventory}
         pestName={pest?.name}
         onScan={() => navigate('/map/scan')}
@@ -146,7 +143,7 @@ type ZoneSheetProps = {
   zone: Zone
   today: string
   recordCount: number
-  cards: ReturnType<typeof evaluate>[]
+  cards: Verdict[]
   inventory: string[]
   pestName?: string
   onScan: () => void
