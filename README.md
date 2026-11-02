@@ -13,7 +13,7 @@
 
 ```bash
 npm install
-npm run dev     # http://localhost:8443
+npm run dev     # http://localhost:3000
 ```
 
 빌드는 `npm run build`, 미리보기는 `npm run preview`.
