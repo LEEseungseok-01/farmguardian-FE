@@ -3,15 +3,46 @@ import { useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { CompanyMark, ProductArt } from '../components/ProductArt'
 import { Sheet } from '../components/Sheet'
-import { SCAN_RESULT, drugById } from '../data/mock'
+import { SCAN_RESULT, drugById, type Drug } from '../data/mock'
+import { api } from '../lib/api'
+import { toDrug, type ServerPesticide } from '../lib/serverVerdict'
+import { useApp } from '../state/AppState'
 import { groupColor, groupLabel } from '../lib/verdict'
 import { ro } from '../lib/korean'
 import './ScanSheet.css'
 
 type Phase = 'idle' | 'reading' | 'done'
 
+type Scan = { lines: string[]; cands: { drug: Drug; match: string }[] }
+type OcrResult = {
+  candidates: { pesticide: ServerPesticide; matched: string[] }[]
+  read: { brand: string | null; product: string | null; company: string | null; text: string }
+}
+
+const FIELD = { brand: '상표', product: '품목', company: '제조사' } as Record<string, string>
+
+// 예시 사진은 서버에 보내지 않고 미리 만든 결과를 보여 준다
+const SAMPLE: Scan = {
+  lines: SCAN_RESULT.lines,
+  cands: SCAN_RESULT.candidates.map((c) => ({ drug: drugById(c.drugId)!, match: c.match })),
+}
+
+function fromOcr(r: OcrResult): Scan {
+  const lines = r.read.text.split('\n').filter(Boolean)
+  return {
+    lines: lines.length ? lines : [r.read.brand, r.read.product, r.read.company].filter((x): x is string => !!x),
+    cands: r.candidates.map((c) => ({
+      drug: toDrug(c.pesticide),
+      match: c.matched.length ? `${c.matched.map((m) => FIELD[m] ?? m).join('·')}이 맞아요` : '',
+    })),
+  }
+}
+
 export default function ScanSheet() {
   const navigate = useNavigate()
+  const { user } = useApp()
+  const [scan, setScan] = useState<Scan | null>(null)
+  const [error, setError] = useState('')
   const [phase, setPhase] = useState<Phase>('idle')
   const [photo, setPhoto] = useState<string | null>(null)
   const [picked, setPicked] = useState<string | null>(null)
@@ -23,10 +54,10 @@ export default function ScanSheet() {
   }, [photo])
 
   useEffect(() => {
-    if (phase !== 'reading') return
+    if (phase !== 'reading' || user) return
     const t = window.setTimeout(() => setPhase('done'), 1300)
     return () => window.clearTimeout(t)
-  }, [phase])
+  }, [phase, user])
 
   const start = (src: string) => {
     setPhoto(src)
@@ -36,12 +67,30 @@ export default function ScanSheet() {
 
   const onFile = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
-    if (f) start(URL.createObjectURL(f))
+    if (f) {
+      start(URL.createObjectURL(f))
+      if (user) read(f)
+    }
     e.target.value = ''
   }
 
+  const read = async (file: File) => {
+    setError('')
+    setScan(null)
+    const form = new FormData()
+    form.append('image', file)
+    try {
+      setScan(fromOcr(await api<OcrResult>('/ocr/pesticide-labels', { method: 'POST', body: form })))
+    } catch (e) {
+      setError((e as Error).message)
+    }
+    setPhase('done')
+  }
+
+  const shown = user ? scan : SAMPLE
+
   const close = () => navigate('/map')
-  const pickedDrug = picked ? drugById(picked) : undefined
+  const pickedDrug = picked ? shown?.cands.find((c) => c.drug.id === picked)?.drug : undefined
 
   return (
     <Sheet
@@ -97,10 +146,12 @@ export default function ScanSheet() {
               앨범에서 가져오기
             </button>
           </div>
-          <button type="button" className="text-btn" onClick={() => start('sample')}>
-            예시 사진으로 해 보기
-            <Icon name="caret-right" size={16} />
-          </button>
+          {!user && (
+            <button type="button" className="text-btn" onClick={() => start('sample')}>
+              예시 사진으로 해 보기
+              <Icon name="caret-right" size={16} />
+            </button>
+          )}
         </div>
       ) : (
         <div className="scan-result">
@@ -118,7 +169,7 @@ export default function ScanSheet() {
                 <p className="scan-ocr__loading" aria-live="polite">글자를 읽고 있어요</p>
               ) : (
                 <ul className="scan-ocr__lines" aria-label="읽은 그대로">
-                  {SCAN_RESULT.lines.map((l) => (
+                  {(shown?.lines ?? []).map((l) => (
                     <li key={l}>{l}</li>
                   ))}
                 </ul>
@@ -130,14 +181,22 @@ export default function ScanSheet() {
             </div>
           </div>
 
-          {phase === 'done' && (
+          {phase === 'done' && error && (
+            <p className="signup-error" role="alert">
+              {error}
+            </p>
+          )}
+          {phase === 'done' && !error && shown?.cands.length === 0 && (
+            <p className="muted-box">읽은 글자로 찾은 약이 없어요. 병해충으로 찾아 보세요.</p>
+          )}
+          {phase === 'done' && !!shown?.cands.length && (
             <fieldset className="scan-cands">
               <legend className="scan-cands__legend">
                 어떤 약인가요?
                 <span>하나를 고르면 판정해 드려요</span>
               </legend>
-              {SCAN_RESULT.candidates.map((c) => {
-                const d = drugById(c.drugId)!
+              {shown.cands.map((c) => {
+                const d = c.drug
                 const on = picked === d.id
                 return (
                   <label key={d.id} className={`cand${on ? ' is-on' : ''}`}>

@@ -15,7 +15,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
       ...init,
       headers: {
         Accept: 'application/json',
-        ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(typeof init?.body === 'string' ? { 'Content-Type': 'application/json' } : {}),
         ...(userId() ? { 'X-User-Id': String(userId()) } : {}),
       },
     })

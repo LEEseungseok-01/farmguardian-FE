@@ -29,6 +29,21 @@ export default function PestSelect() {
   const [info, setInfo] = useState<Pest | null>(null)
   const month = monthOf(today)
 
+  // 로그인했다면 이 작물에 병해충이 있는 부위만 보여 준다
+  const [serverParts, setServerParts] = useState<string[] | null>(null)
+  useEffect(() => {
+    if (!user || !zone.cropId) return
+    let stale = false
+    api<string[]>(`/crops/${zone.cropId}/symptom-parts`).then(
+      (r) => !stale && setServerParts(r),
+      () => {},
+    )
+    return () => {
+      stale = true
+    }
+  }, [user, zone.cropId])
+  const parts = serverParts ? PARTS.filter((p) => serverParts.includes(p.key)) : PARTS
+
   // 로그인했다면 부위별 후보는 BE가 거른다. 받아 오기 전에는 거르지 않는다
   const [partIds, setPartIds] = useState<Set<string> | null>(null)
   useEffect(() => {
@@ -95,7 +110,7 @@ export default function PestSelect() {
         <section aria-labelledby="part-title">
           <h2 id="part-title" className="section-heading section-heading--sm">어디에 증상이 있나요?</h2>
           <div className="part-grid" role="group" aria-label="증상 부위">
-            {PARTS.map((p) => (
+            {parts.map((p) => (
               <button
                 key={p.key}
                 type="button"
