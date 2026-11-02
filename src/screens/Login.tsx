@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { FeatureArt, type FeatureKind } from '../components/FeatureArt'
 import { FieldMap } from '../components/FieldMap'
 import { Icon } from '../components/Icon'
+import { LoginSheet } from '../components/LoginSheet'
 import type { IconName } from '../components/iconPaths'
 import { Wordmark } from '../components/Logo'
 import { ProductArt } from '../components/ProductArt'
@@ -81,6 +82,7 @@ const FLOW: { title: string; body: string }[] = [
 
 export default function Login() {
   const [signingUp, setSigningUp] = useState(false)
+  const [loggingIn, setLoggingIn] = useState(false)
   const [guide, setGuide] = useState(false)
   const [active, setActive] = useState<string | null>(null)
   const [last, setLast] = useState('z-a')
@@ -155,6 +157,9 @@ export default function Login() {
         <button type="button" className="btn btn--primary btn--lg" onClick={() => setSigningUp(true)}>
           회원가입
         </button>
+        <button type="button" className="btn btn--ghost" onClick={() => setLoggingIn(true)}>
+          이미 계정이 있어요
+        </button>
         <button type="button" className="btn btn--outline btn--lg" onClick={() => setGuide(true)}>
           어떻게 쓰는 건가요?
           <Icon name="arrow-right" size={20} />
@@ -162,6 +167,8 @@ export default function Login() {
       </div>
 
       {guide && <GuideSheet onClose={() => setGuide(false)} />}
+
+      {loggingIn && <LoginSheet onClose={() => setLoggingIn(false)} />}
 
       {signingUp && <SignupSheet onClose={() => setSigningUp(false)} />}
     </main>
