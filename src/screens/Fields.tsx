@@ -6,6 +6,7 @@ import { CropField } from '../components/CropField'
 import { FieldMap } from '../components/FieldMap'
 import { Icon } from '../components/Icon'
 import { Sheet } from '../components/Sheet'
+import { SignupSheet } from '../components/SignupSheet'
 import { ADDRESS_BOOK, type Crop, type Zone } from '../data/mock'
 import { diffDays, num, toPyeong } from '../lib/date'
 import { evenSplit, splitParcel, type Split } from '../lib/parcel'
@@ -33,8 +34,9 @@ export default function Fields() {
     )
     if (i >= 0) setShown(i)
   }
-  const { farms, zones, records, currentFarm, setCurrentFarm, updateZone, changeCrop, deleteZone, today, showToast } = useApp()
+  const { user, farms, zones, records, currentFarm, setCurrentFarm, updateZone, changeCrop, deleteZone, confirmHistory, deleteFarm, today, showToast } = useApp()
   const [finding, setFinding] = useState(false)
+  const [deletingFarm, setDeletingFarm] = useState(false)
   const [pending, setPending] = useState<Pending | null>(null)
   const farmZones = zones.filter((z) => z.farmId === currentFarm.id)
   const countOf = (id: string) => records.filter((r) => r.zoneId === id).length
@@ -94,6 +96,12 @@ export default function Fields() {
             <Icon name="magnifying-glass" size={22} />
             내 밭 찾기
           </button>
+          {user && (
+            <button type="button" className="btn btn--ghost" onClick={() => setDeletingFarm(true)}>
+              <Icon name="trash" size={20} />
+              ‘{currentFarm.name}’ 밭 삭제
+            </button>
+          )}
         </section>
 
         <section aria-labelledby="zones-title">
@@ -173,7 +181,17 @@ export default function Fields() {
                       ? `심은 지 ${diffDays(today, z.plantedAt!)}일${z.harvestAt ? `, 수확까지 ${diffDays(z.harvestAt, today)}일` : ', 수확 예정일을 넣어 주세요'}`
                       : '아직 심기 전이에요'}
                   </p>
-                  {farmZones.length > 1 && (
+                  {user && !z.historyConfirmed && (
+                    <button
+                      type="button"
+                      className="btn btn--soft"
+                      onClick={async () => (await confirmHistory(z.id)) && showToast({ text: '지난 기록 확인을 마쳤어요' })}
+                    >
+                      지난 기록을 빠짐없이 넣었어요
+                    </button>
+                  )}
+                  {/* 서버에는 구역을 지우는 기능이 없다 */}
+                  {farmZones.length > 1 && !user && (
                     <button
                       type="button"
                       className="zone-edit__delete"
@@ -210,7 +228,9 @@ export default function Fields() {
       >
         {pending && (
           <p>
-            {pending.count > 0 ? (
+            {user && pending.type === 'crop' ? (
+              '기록은 그대로 두고 새 작기로 봐요. 수확 예정일은 비워져요.'
+            ) : pending.count > 0 ? (
               <>
                 이 구역의 살포 기록 {pending.count}건도 함께 삭제돼요.
                 <br />
@@ -225,7 +245,25 @@ export default function Fields() {
         )}
       </ConfirmDialog>
 
-      {finding && <FindFarmSheet onClose={() => setFinding(false)} />}
+      {finding && (user ? <SignupSheet addField onClose={() => setFinding(false)} /> : <FindFarmSheet onClose={() => setFinding(false)} />)}
+
+      <ConfirmDialog
+        open={deletingFarm}
+        danger
+        title={`‘${currentFarm.name}’ 밭을 삭제할까요?`}
+        confirmLabel="삭제하기"
+        onConfirm={async () => {
+          setDeletingFarm(false)
+          if (await deleteFarm(currentFarm.id)) showToast({ text: '밭을 삭제했어요' })
+        }}
+        onCancel={() => setDeletingFarm(false)}
+      >
+        <p>
+          이 밭의 구역과 살포 기록도 함께 지워져요.
+          <br />
+          <strong>삭제한 밭은 복구할 수 없어요.</strong>
+        </p>
+      </ConfirmDialog>
     </div>
   )
 }

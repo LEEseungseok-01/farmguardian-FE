@@ -11,12 +11,13 @@ import PestSelect from './screens/PestSelect'
 import ScanSheet from './screens/ScanSheet'
 import Settings from './screens/Settings'
 import Verdict from './screens/Verdict'
+import Onboarding from './screens/Onboarding'
 import ZoneSetup from './screens/ZoneSetup'
 import { AppProvider, useApp } from './state/AppState'
 
 /** 로그인한 사람은 밭과 구역을 받아 와야 화면을 보여 준다. 구역이 없으면 나누는 화면이 먼저다 */
 function Gate({ children }: { children: ReactNode }) {
-  const { user, ready, loadError, reload, signOut, unzoned } = useApp()
+  const { user, ready, loadError, reload, signOut, unzoned, onboarded } = useApp()
   if (!user) return children
   if (!ready) {
     return (
@@ -37,7 +38,8 @@ function Gate({ children }: { children: ReactNode }) {
       </div>
     )
   }
-  return unzoned ? <ZoneSetup farm={unzoned} /> : children
+  if (unzoned) return <ZoneSetup farm={unzoned} />
+  return onboarded ? children : <Onboarding />
 }
 
 export default function App() {

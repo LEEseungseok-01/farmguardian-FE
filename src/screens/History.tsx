@@ -199,7 +199,7 @@ export default function History() {
   )
 }
 
-function AddRecordSheet({ onClose, today, defaultZone }: { onClose: () => void; today: string; defaultZone: string }) {
+export function AddRecordSheet({ onClose, today, defaultZone }: { onClose: () => void; today: string; defaultZone: string }) {
   const { user, farmZones, addRecord, showToast, pests } = useApp()
   const [zoneId, setZoneId] = useState(defaultZone)
   const zone = farmZones.find((z) => z.id === zoneId) ?? farmZones[0]

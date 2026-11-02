@@ -21,9 +21,18 @@ type ServerField = {
     crop: { id: number; name: string }
     planted_at: string | null
     harvest_at: string | null
+    history_confirmed: boolean
     area_m2: number
     geometry: { coordinates: [number, number][][][] }
   }[]
+}
+
+type ServerZoneOut = {
+  name: string
+  crop: { id: number; name: string }
+  planted_at: string | null
+  harvest_at: string | null
+  history_confirmed: boolean
 }
 
 type ServerSpray = {
@@ -125,6 +134,7 @@ function fromServer(fields: ServerField[]) {
       name: z.name,
       crop: z.crop.name as Crop,
       cropId: z.crop.id,
+      historyConfirmed: z.history_confirmed,
       plantedAt: z.planted_at,
       harvestAt: z.harvest_at,
       areaM2: z.area_m2,
@@ -141,6 +151,14 @@ type AppState = {
   signedIn: boolean
   signIn: (user: User) => void
   signOut: () => void
+  /** BE가 지원하는 작물 (로그인했을 때만) */
+  crops: { id: number; name: string }[]
+  onboarded: boolean
+  completeOnboarding: () => Promise<boolean>
+  /** 지난 기록을 빠짐없이 넣었다고 확인한다 (「누락 없음」) */
+  confirmHistory: (zoneId: string) => Promise<boolean>
+  deleteFarm: (id: string) => Promise<boolean>
+  withdraw: () => Promise<boolean>
   /** 로그인했다면 밭·구역을 서버에서 다 받았는지 */
   ready: boolean
   loadError: string
@@ -195,6 +213,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pestByZone, setPestByZone] = useState(DEFAULT_PEST_BY_ZONE)
   const [user, setUser] = useState<User | null>(readUser)
   const [ready, setReady] = useState(user === null)
+  const [crops, setCrops] = useState<{ id: number; name: string }[]>([])
+  const [onboarded, setOnboarded] = useState(true)
+  const pending = useRef<Record<string, { body: Record<string, unknown>; timer: number }>>({})
   const [loadError, setLoadError] = useState('')
   const setAuth = useCallback((u: User | null) => {
     setUser(u)
@@ -216,6 +237,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setPests(PESTS)
       setRecords(RECORDS)
       setInventory(INVENTORY)
+      setCrops([])
+      setOnboarded(true)
       setCurrentFarmId('f1')
       setReady(true)
       return
@@ -225,16 +248,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     api<ServerField[]>('/fields')
       .then(async (fields) => {
         const next = fromServer(fields)
-        const [loaded, sprays, stock] = await Promise.all([
+        const [loaded, sprays, stock, cropList, me] = await Promise.all([
           loadPests(next.zones),
           loadSprays(next.zones),
           api<number[]>('/inventory'),
+          api<{ id: number; name: string }[]>('/crops'),
+          api<{ onboarded: boolean }>('/me'),
         ])
         setFarms(next.farms)
         setZones(next.zones)
         setPests(loaded)
         setRecords(sprays)
         setInventory(stock.map(String))
+        setCrops(cropList)
+        setOnboarded(me.onboarded)
         setCurrentFarmId((id) => (next.farms.some((f) => f.id === id) ? id : (next.farms[0]?.id ?? '')))
         setReady(true)
       })
@@ -265,6 +292,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
     timer.current = window.setTimeout(() => setToast(null), 4000)
   }, [])
 
+  // 구역 고침을 BE에 보내고, 서버가 돌려준 값(수확 예정일이 비워지는 것 등)으로 화면을 맞춘다
+  const savePatch = useCallback(
+    async (id: string, body: Record<string, unknown>) => {
+      try {
+        const z = await api<ServerZoneOut>(`/zones/${id}`, { method: 'PATCH', body: JSON.stringify(body) })
+        setZones((list) =>
+          list.map((x) =>
+            x.id === id
+              ? { ...x, name: z.name, crop: z.crop.name as Crop, cropId: z.crop.id, plantedAt: z.planted_at, harvestAt: z.harvest_at, historyConfirmed: z.history_confirmed }
+              : x,
+          ),
+        )
+        return true
+      } catch (e) {
+        showToast({ text: (e as Error).message })
+        reload() // 화면에 먼저 반영해 둔 값을 서버 값으로 되돌린다
+        return false
+      }
+    },
+    [reload, showToast],
+  )
+  // 이름은 한 글자마다 바뀌므로 잠깐 모았다가 한 번에 보낸다
+  const queuePatch = (id: string, body: Record<string, unknown>) => {
+    const cur = pending.current[id]
+    window.clearTimeout(cur?.timer)
+    const merged = { ...cur?.body, ...body }
+    pending.current[id] = {
+      body: merged,
+      timer: window.setTimeout(() => {
+        delete pending.current[id]
+        savePatch(id, merged)
+      }, 500),
+    }
+  }
+
   const value = useMemo<AppState>(
     () => ({
       today: user ? todayKst() : TODAY,
@@ -276,6 +338,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       signedIn: user !== null,
       signIn: setAuth,
       signOut: () => setAuth(null),
+      crops,
+      onboarded,
       ready,
       loadError,
       reload,
@@ -348,10 +412,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setRecords((list) => list.map((x) => (x.id === id ? { ...x, cancelled } : x)))
         return true
       },
-      updateZone: (id, patch) => setZones((list) => list.map((z) => (z.id === id ? { ...z, ...patch } : z))),
+      updateZone: (id, patch) => {
+        setZones((list) => list.map((z) => (z.id === id ? { ...z, ...patch } : z)))
+        if (!user) return
+        const body: Record<string, unknown> = {}
+        if (patch.name?.trim()) body.name = patch.name
+        if ('plantedAt' in patch) body.planted_at = patch.plantedAt
+        if ('harvestAt' in patch) body.harvest_at = patch.harvestAt
+        if (Object.keys(body).length) queuePatch(id, body)
+      },
       changeCrop: (id, crop) => {
         setZones((list) => list.map((z) => (z.id === id ? { ...z, crop } : z)))
-        setRecords((list) => list.filter((r) => r.zoneId !== id))
+        if (user) {
+          const found = crops.find((c) => c.name === crop)
+          if (found) savePatch(id, { crop_id: found.id }) // 기록은 서버가 그대로 보존한다
+        } else {
+          setRecords((list) => list.filter((r) => r.zoneId !== id))
+        }
+      },
+      confirmHistory: (zoneId) => savePatch(zoneId, { history_confirmed: true }),
+      completeOnboarding: async () => {
+        try {
+          await api('/me/onboarding', { method: 'POST' })
+          setOnboarded(true)
+          return true
+        } catch (e) {
+          showToast({ text: (e as Error).message })
+          return false
+        }
+      },
+      deleteFarm: async (id) => {
+        try {
+          await api(`/fields/${id}`, { method: 'DELETE' })
+          reload()
+          return true
+        } catch (e) {
+          showToast({ text: (e as Error).message })
+          return false
+        }
+      },
+      withdraw: async () => {
+        try {
+          await api('/me', { method: 'DELETE' })
+          setAuth(null)
+          return true
+        } catch (e) {
+          showToast({ text: (e as Error).message })
+          return false
+        }
       },
       deleteZone: (id) => {
         setZones((list) => list.filter((z) => z.id !== id))
@@ -377,7 +485,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toast,
       showToast,
     }),
-    [farms, zones, pests, pestById, records, inventory, user, setAuth, ready, loadError, reload, unzoned, currentFarm, farmZones, zone, pestOf, toast, showToast],
+    [farms, zones, pests, pestById, records, inventory, user, setAuth, crops, onboarded, savePatch, ready, loadError, reload, unzoned, currentFarm, farmZones, zone, pestOf, toast, showToast],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

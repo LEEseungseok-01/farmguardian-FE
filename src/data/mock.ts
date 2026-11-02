@@ -41,6 +41,8 @@ export type Zone = {
   cropId?: number
   plantedAt: string | null
   plannedAt?: string
+  /** 「누락 없음」 확인을 마쳤는지. 예시 데이터에는 없다 */
+  historyConfirmed?: boolean
   harvestAt: string | null
   areaM2: number
   points: Point[]

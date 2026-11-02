@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AppBar } from '../components/AppBar'
 import { BottomNav } from '../components/BottomNav'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Icon } from '../components/Icon'
 import { DATA_SOURCE } from '../data/mock'
 import { useApp } from '../state/AppState'
@@ -34,7 +36,8 @@ const PRIVACY = [
 ]
 
 export default function Settings() {
-  const { user, signedIn, signOut, farms, zones, showToast } = useApp()
+  const { user, signedIn, signOut, withdraw, farms, zones, showToast } = useApp()
+  const [leaving, setLeaving] = useState(false)
   const navigate = useNavigate()
 
   return (
@@ -73,6 +76,12 @@ export default function Settings() {
             )}
           </div>
         </section>
+
+        {signedIn && (
+          <button type="button" className="btn btn--ghost" onClick={() => setLeaving(true)}>
+            회원 탈퇴
+          </button>
+        )}
 
         <section aria-labelledby="farm-title">
           <h2 id="farm-title" className="section-heading section-heading--sm">내 밭</h2>
@@ -153,6 +162,24 @@ export default function Settings() {
 
         <p className="set-ver">팜가디언 1.0.0</p>
       </div>
+
+      <ConfirmDialog
+        open={leaving}
+        danger
+        title="회원 탈퇴할까요?"
+        confirmLabel="탈퇴하기"
+        onConfirm={async () => {
+          setLeaving(false)
+          if (await withdraw()) showToast({ text: '탈퇴했어요' })
+        }}
+        onCancel={() => setLeaving(false)}
+      >
+        <p>
+          밭과 구역, 살포 기록이 모두 지워져요.
+          <br />
+          <strong>삭제한 정보는 복구할 수 없어요.</strong>
+        </p>
+      </ConfirmDialog>
 
       <BottomNav />
     </div>

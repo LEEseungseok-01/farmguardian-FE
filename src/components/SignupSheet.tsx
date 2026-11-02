@@ -40,10 +40,10 @@ const MAX_PARCELS = 20
 const TITLES = { 1: '회원가입', 2: '내 밭 찾기', 3: '필지 고르기' }
 
 /** 아이디·비밀번호 → 주소로 밭 찾기 → 팜맵 필지 고르기. 마지막에 BE 가입을 부른다 */
-export function SignupSheet({ onClose }: { onClose: () => void }) {
+export function SignupSheet({ onClose, addField }: { onClose: () => void; addField?: boolean }) {
   const navigate = useNavigate()
-  const { signIn } = useApp()
-  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const { signIn, reload } = useApp()
+  const [step, setStep] = useState<1 | 2 | 3>(addField ? 2 : 1)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [q, setQ] = useState('')
@@ -98,6 +98,16 @@ export function SignupSheet({ onClose }: { onClose: () => void }) {
 
   const signup = () =>
     run(async () => {
+      if (addField) {
+        // 새 밭은 구역이 없으므로, 받아 오면 구역 나누기 화면이 이어서 뜬다
+        await api('/fields', {
+          method: 'POST',
+          body: JSON.stringify({ name: name.trim(), parcel_farmmap_ids: picked, address: addr?.jibun_addr }),
+        })
+        reload()
+        onClose()
+        return
+      }
       const me = await api<{ id: number; username: string }>('/auth/signup', {
         method: 'POST',
         body: JSON.stringify({
@@ -131,11 +141,13 @@ export function SignupSheet({ onClose }: { onClose: () => void }) {
             </button>
           </div>
         ) : step === 2 ? (
-          <div className="sheet-actions sheet-actions--row">
-            <button type="button" className="btn btn--ghost" onClick={() => go(1)}>
-              이전
-            </button>
-          </div>
+          addField ? undefined : (
+            <div className="sheet-actions sheet-actions--row">
+              <button type="button" className="btn btn--ghost" onClick={() => go(1)}>
+                이전
+              </button>
+            </div>
+          )
         ) : (
           <div className="sheet-actions sheet-actions--row">
             <button type="button" className="btn btn--ghost" onClick={() => go(2)}>
@@ -147,7 +159,7 @@ export function SignupSheet({ onClose }: { onClose: () => void }) {
               disabled={busy || !name.trim() || picked.length === 0}
               onClick={signup}
             >
-              {busy ? '가입하는 중…' : '가입하기'}
+              {busy ? '저장하는 중…' : addField ? '밭 등록하기' : '가입하기'}
             </button>
           </div>
         )
