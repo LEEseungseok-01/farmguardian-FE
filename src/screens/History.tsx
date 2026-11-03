@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { AppBar } from '../components/AppBar'
 import { BottomNav } from '../components/BottomNav'
 import { GroupChip, RepeatChip } from '../components/DrugCard'
@@ -18,7 +19,10 @@ export default function History() {
   const { records, farmZones, zones, setRecordCancelled, today, showToast, zone: currentZone, pestById } = useApp()
   const [filter, setFilter] = useState<string>('all')
   const [confirm, setConfirm] = useState<SprayRecord | null>(null)
-  const [adding, setAdding] = useState(false)
+  // 판정 화면에서 「지난 기록 추가」로 오면 추가 창을 바로 연다
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [adding, setAdding] = useState(() => (location.state as { add?: boolean } | null)?.add === true)
 
   const zoneIds = farmZones.map((z) => z.id)
   const list = useMemo(
@@ -189,7 +193,11 @@ export default function History() {
 
       {adding && (
         <AddRecordSheet
-          onClose={() => setAdding(false)}
+          onClose={() => {
+            setAdding(false)
+            // 새로고침해도 다시 열리지 않게 넘겨받은 상태를 지운다
+            if (location.state) navigate(location.pathname, { replace: true, state: null })
+          }}
           today={today}
           defaultZone={filter !== 'all' ? filter : currentZone.id}
         />

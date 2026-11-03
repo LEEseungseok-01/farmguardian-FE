@@ -38,7 +38,7 @@ export default function Verdict() {
       stale = true
     }
   }, [user, zone.id, pest?.id, drugId]) // eslint-disable-line react-hooks/exhaustive-deps
-  const sv = user ? (verdicts.find((x) => x.drug.id === drugId) ?? (judged ? toVerdict(judged) : undefined)) : undefined
+  const sv = user ? (verdicts.find((x) => x.drug.id === drugId) ?? (judged ? toVerdict(judged, !!zone.plantedAt) : undefined)) : undefined
   const drug = user ? sv?.drug : drugById(drugId)
 
   if (!drug || !pest) {
@@ -86,14 +86,22 @@ export default function Verdict() {
             </span>
             <StatusBadge status={v.status} size="lg" />
           </div>
-          <h2 id="verdict-headline" className="verdict-hero__headline">{meta.headline}</h2>
-          {v.status !== 'ok' && (
+          <h2 id="verdict-headline" className="verdict-hero__headline">
+            {v.atPlanting && v.status === 'preplant' ? '심을 때 쓰는 약이에요' : meta.headline}
+          </h2>
+          {/* 심을 때 쓰는 약은 제목이 이유라 같은 문장을 다시 쓰지 않는다. 자세한 설명과 원문은 시기 칸에 있다 */}
+          {v.atPlanting && v.status === 'preplant' && (
+            <p className="verdict-hero__notnow">
+              {zone.plantedAt ? '이미 심은 구역이라 지금은 쓸 수 없어요' : '심는 날에만 쓸 수 있어요'}
+            </p>
+          )}
+          {v.status !== 'ok' && !(v.atPlanting && v.status === 'preplant') && (
             <p className="verdict-hero__reason">
               {v.reasonTag && <ReasonTag>{v.reasonTag}</ReasonTag>}
               {v.reason}
             </p>
           )}
-          {v.status === 'preplant' && (
+          {v.status === 'preplant' && !v.atPlanting && (
             <Link to="/fields" className="verdict-hero__link">
               심은 날 입력하기
               <Icon name="caret-right" size={16} />
@@ -188,21 +196,33 @@ export default function Verdict() {
       </div>
 
       <div className="cta-bar">
-        {blocked && (
+        {blocked && !(v.atPlanting && v.status === 'preplant') && (
           <p className="cta-bar__note">
             <Icon name="lock-simple" size={18} />
             {v.status === 'no' ? '쓰면 안 되는 약은 기록할 수 없어요' : '심은 뒤에 기록할 수 있어요'}
           </p>
         )}
-        <button
-          type="button"
-          className="btn btn--primary btn--lg"
-          disabled={blocked || doneToday}
-          onClick={record}
-        >
-          <Icon name={doneToday ? 'check-circle' : 'note-pencil'} size={22} weight="fill" />
-          {doneToday ? '오늘 기록했어요' : '오늘 뿌린 것으로 기록하기'}
-        </button>
+        {/* 심을 때 쓰는 약은 여기서 기록할 길이 없으니, 막힌 버튼 대신 지난 기록 추가로 보낸다 */}
+        {v.atPlanting && v.status === 'preplant' ? (
+          <button
+            type="button"
+            className="btn btn--soft btn--lg"
+            onClick={() => navigate('/history', { state: { add: true } })}
+          >
+            <Icon name="note-pencil" size={22} weight="fill" />
+            심을 때 뿌린 약으로 기록하기
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="btn btn--primary btn--lg"
+            disabled={blocked || doneToday}
+            onClick={record}
+          >
+            <Icon name={doneToday ? 'check-circle' : 'note-pencil'} size={22} weight="fill" />
+            {doneToday ? '오늘 기록했어요' : '오늘 뿌린 약으로 기록하기'}
+          </button>
+        )}
         {doneToday && (
           <button type="button" className="text-btn cta-bar__link" onClick={() => navigate('/history')}>
             기록 보기
@@ -222,11 +242,12 @@ function CheckCell({ c }: { c: Check }) {
       <span className="check__head">
         <Icon name={m ? m.icon : 'minus'} weight="fill" size={22} />
         <span className="check__label">{c.label}</span>
-        <span className="check__state">{m ? m.check : '해당 없음'}</span>
+        <span className="check__state">{m ? (c.stateLabel ?? m.check) : '해당 없음'}</span>
       </span>
       <span className="check__text">
         {c.tag && <ReasonTag>{c.tag}</ReasonTag>}
         {c.text}
+        {c.source && <span className="check__source">원문: {c.source}</span>}
       </span>
     </li>
   )

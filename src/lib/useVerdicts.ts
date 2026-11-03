@@ -15,7 +15,7 @@ export function useVerdicts(zone: Zone, pest: Pest | undefined) {
     if (!user || !pest) return
     let stale = false
     api<PreviewItem[]>(`/zones/${zone.id}/judgments/preview?pest_id=${pest.id}`).then(
-      (items) => !stale && setServer({ key, list: items.map(toVerdict), error: '' }),
+      (items) => !stale && setServer({ key, list: items.map((item) => toVerdict(item, !!zone.plantedAt)), error: '' }),
       (e: Error) => !stale && setServer({ key, list: [], error: e.message }),
     )
     return () => {
