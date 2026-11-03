@@ -15,7 +15,7 @@ const blank = (i: number): Draft => ({ name: `구역 ${i + 1}`, cropId: null, pl
 
 /** 가입 직후처럼 구역이 없는 밭을 나눈다. 같은 비율로 나누고 구역마다 이름·작물·심은 날을 받는다 */
 export default function ZoneSetup({ farm }: { farm: Farm }) {
-  const { reload, signOut } = useApp()
+  const { reload, signOut, today } = useApp()
   const [count, setCount] = useState(1)
   const [direction, setDirection] = useState<Direction>('crosswise')
   const [drafts, setDrafts] = useState<Draft[]>([blank(0)])
@@ -139,7 +139,7 @@ export default function ZoneSetup({ farm }: { farm: Farm }) {
             </label>
             <label className="field">
               <span className="field__label">심은 날 (아직이면 비워 두세요)</span>
-              <input type="date" className="input" value={d.plantedAt} onChange={(e) => patch(i, { plantedAt: e.target.value })} />
+              <input type="date" className="input" value={d.plantedAt} max={today} onChange={(e) => patch(i, { plantedAt: e.target.value })} />
             </label>
           </div>
         ))}

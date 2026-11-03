@@ -17,6 +17,7 @@ type Parcel = {
   land_use: string
   area_m2: number
   matches_query: boolean
+  used_by_field_id: number | null
   geometry: { coordinates: [number, number][][][] }
 }
 
@@ -53,6 +54,7 @@ export function SignupSheet({ onClose, addField }: { onClose: () => void; addFie
   const [picked, setPicked] = useState<string[]>([])
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
+  const [loadingPnu, setLoadingPnu] = useState<string | null>(null)
   const [error, setError] = useState('')
 
   const go = (to: 1 | 2 | 3) => {
@@ -81,20 +83,26 @@ export function SignupSheet({ onClose, addField }: { onClose: () => void; addFie
     run(async () => setFound(await api(`/addresses/search?keyword=${encodeURIComponent(keyword)}`)))
   }
 
-  const pick = (a: Address) =>
-    run(async () => {
+  // 팜맵 조회에 1초 가까이 걸려서, 누른 주소를 표시하고 화면 가운데에 「불러오는 중」을 띄운다
+  const pick = (a: Address) => {
+    setLoadingPnu(a.pnu)
+    return run(async () => {
       const list = await api<Parcel[]>(`/parcels?pnu=${a.pnu}`)
       if (list.length === 0) throw new Error('이 주소에는 팜맵 필지가 없어요. 다른 주소로 찾아 주세요')
       setAddr(a)
       setParcels(list)
-      setPicked(list.filter((p) => p.matches_query).map((p) => p.farmmap_id))
+      // 내 다른 밭이 이미 쓰는 필지는 고를 수 없다 (BE가 409로 막는다)
+      setPicked(list.filter((p) => p.matches_query && p.used_by_field_id == null).map((p) => p.farmmap_id))
       setStep(3)
-    })
+    }).finally(() => setLoadingPnu(null))
+  }
 
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    if (parcels.find((p) => p.farmmap_id === id)?.used_by_field_id != null) return
     setPicked((list) =>
       list.includes(id) ? list.filter((x) => x !== id) : list.length < MAX_PARCELS ? [...list, id] : list,
     )
+  }
 
   const signup = () =>
     run(async () => {
@@ -123,6 +131,7 @@ export function SignupSheet({ onClose, addField }: { onClose: () => void; addFie
     })
 
   return (
+    <>
     <Sheet
       open
       tall
@@ -231,7 +240,13 @@ export function SignupSheet({ onClose, addField }: { onClose: () => void; addFie
                 <ul className="addr-list">
                   {found.items.map((a) => (
                     <li key={a.pnu}>
-                      <button type="button" className="addr" disabled={busy} onClick={() => pick(a)}>
+                      <button
+                        type="button"
+                        className={`addr addr--pick${loadingPnu === a.pnu ? ' is-on' : ''}`}
+                        disabled={busy}
+                        aria-busy={loadingPnu === a.pnu}
+                        onClick={() => pick(a)}
+                      >
                         <Icon name="map-pin" size={22} />
                         <span className="addr__body">
                           <span className="addr__hint">{a.jibun_addr}</span>
@@ -266,15 +281,18 @@ export function SignupSheet({ onClose, addField }: { onClose: () => void; addFie
                 const on = picked.includes(p.farmmap_id)
                 return (
                   <li key={p.farmmap_id}>
-                    <label className="addr">
+                    <label className={`addr addr--pick${on ? ' is-on' : ''}`}>
                       <input
                         type="checkbox"
                         checked={on}
-                        disabled={!on && picked.length >= MAX_PARCELS}
+                        disabled={p.used_by_field_id != null || (!on && picked.length >= MAX_PARCELS)}
                         onChange={() => toggle(p.farmmap_id)}
                       />
                       <span className="addr__body">
-                        <span className="addr__hint">{p.lnm}</span>
+                        <span className="addr__hint">
+                          {p.lnm}
+                          {p.used_by_field_id != null && ' · 이미 다른 밭에 있어요'}
+                        </span>
                         <span className="addr__text">
                           {p.land_use} · {num(Math.round(p.area_m2))}㎡
                         </span>
@@ -304,5 +322,14 @@ export function SignupSheet({ onClose, addField }: { onClose: () => void; addFie
         )}
       </div>
     </Sheet>
+    {loadingPnu && (
+      <div className="loading-layer" role="status" aria-live="polite">
+        <div className="loading-card">
+          <span className="spinner" aria-hidden="true" />
+          필지 불러오는 중…
+        </div>
+      </div>
+    )}
+    </>
   )
 }

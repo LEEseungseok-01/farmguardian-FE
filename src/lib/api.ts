@@ -7,7 +7,17 @@ const userId = () => {
   }
 }
 
-/** BE를 부른다. 실패하면 BE가 준 `{error: {message}}`의 message를 Error로 던진다 */
+type ApiError = { message?: string; details?: { errors?: { msg?: string }[] } }
+
+// 422는 겉 문구가 늘 「요청 값이 올바르지 않습니다」라서, 한글로 된 실제 이유가 있으면 그걸 보여 준다.
+// FastAPI 기본 검증 문구(영어)는 사용자에게 보이지 않게 겉 문구를 쓴다
+const errorText = (error?: ApiError) => {
+  const reason = error?.details?.errors?.[0]?.msg?.replace(/^Value error, /, '')
+  if (reason && /[가-힣]/.test(reason)) return reason
+  return error?.message ?? '요청에 실패했어요'
+}
+
+/** BE를 부른다. 실패하면 BE가 준 오류 문구를 Error로 던진다 */
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
@@ -23,6 +33,6 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error('서버에 연결할 수 없어요')
   }
   const data = await res.json().catch(() => null)
-  if (!res.ok) throw new Error(data?.error?.message ?? '요청에 실패했어요')
+  if (!res.ok) throw new Error(errorText(data?.error))
   return data as T
 }
