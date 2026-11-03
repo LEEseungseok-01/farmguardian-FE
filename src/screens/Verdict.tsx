@@ -202,7 +202,7 @@ export default function Verdict() {
             {v.status === 'no'
               ? '쓰면 안 되는 약은 기록할 수 없어요'
               : v.atPlanting
-                ? '심을 때 쓰는 약은 여기서 기록할 수 없어요'
+                ? '심을 때 쓰는 약은 살포 이력에서 기록해요'
                 : '심은 뒤에 기록할 수 있어요'}
           </p>
         )}
@@ -215,6 +215,12 @@ export default function Verdict() {
           <Icon name={doneToday ? 'check-circle' : 'note-pencil'} size={22} weight="fill" />
           {doneToday ? '오늘 기록했어요' : '오늘 뿌린 것으로 기록하기'}
         </button>
+        {v.atPlanting && v.status === 'preplant' && (
+          <button type="button" className="text-btn cta-bar__link" onClick={() => navigate('/history', { state: { add: true } })}>
+            지난 기록 추가
+            <Icon name="caret-right" size={16} />
+          </button>
+        )}
         {doneToday && (
           <button type="button" className="text-btn cta-bar__link" onClick={() => navigate('/history')}>
             기록 보기
