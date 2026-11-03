@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Toast } from './components/Toast'
+import { Tour } from './components/Tour'
 import Dashboard from './screens/Dashboard'
 import DrugList from './screens/DrugList'
 import Fields from './screens/Fields'
@@ -63,6 +64,7 @@ export default function App() {
         </Routes>
         </Gate>
         <Toast />
+        <Tour />
       </div>
     </AppProvider>
   )

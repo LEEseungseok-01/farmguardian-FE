@@ -58,10 +58,10 @@ const CHECK_ICON: Record<CheckStatus, IconName> = {
   skip: 'minus',
 }
 
-// 146,507건은 농촌진흥청 PSIS 농약검색 총 건수(2026-10-31 조회).
+// 4,031개는 농촌진흥청 PSIS 첫 화면에 표시되는 등록 농약제품 수(2026-11-03 조회).
 // 0.01ppm은 PLS 일률기준. 59.2%는 KREI R867 원문 수치 그대로.
 const FACTS: { label: string; value: string; note: string }[] = [
-  { label: '지켜야 할 안전사용기준', value: '146,507건', note: '약마다 작물마다 다 달라요' },
+  { label: '등록된 농약', value: '4,031개', note: '약마다 작물마다 기준이 다 달라요' },
   { label: '내 작물에 사용하면 안 되는 약', value: '0.01ppm', note: '이만큼만 나와도 못 팔아요' },
   { label: '기준이 있다는 걸 아는 농업인', value: '59.2%', note: '열에 넷은 몰라요' },
 ]

@@ -1,0 +1,114 @@
+/* 첫 안내. 어두운 막에 구멍을 하나 뚫어 지금 설명하는 것만 남긴다 */
+.tour {
+  /* 공용 --scrim 보다 진하다. 지도 위에서는 반투명으로는 구멍이 안 읽힌다 */
+  --tour-dim: #12110ed9;
+
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tour {
+    --tour-dim: #000000bf;
+  }
+}
+
+/* 막 자체는 투명하고 손가락만 막는다. 어두운 색은 구멍의 box-shadow가 칠한다 */
+.tour__veil {
+  position: absolute;
+  inset: 0;
+}
+
+.tour__hole {
+  position: fixed;
+  border-radius: var(--r-md);
+  box-shadow: 0 0 0 9999px var(--tour-dim);
+  outline: 2px solid var(--accent);
+  pointer-events: none;
+  animation: fade-in 0.2s ease;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+
+.tour__card {
+  position: fixed;
+  left: 50%;
+  width: min(calc(var(--app-max) - var(--sp-8)), calc(100vw - var(--sp-8)));
+  transform: translateX(-50%);
+  padding: var(--sp-5);
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  box-shadow: 0 16px 40px var(--shadow-strong);
+  animation: rise 0.24s ease;
+}
+
+.tour__count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--accent-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.tour__title {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.tour__body {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.tour__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}
+
+.tour__dots {
+  display: flex;
+  gap: 5px;
+  margin-right: auto;
+}
+
+.tour__dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-pill);
+  background: var(--line-strong);
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+.tour__dots span.is-on {
+  width: 20px;
+  background: var(--accent);
+}
+
+.tour__foot .btn {
+  padding: 0 var(--sp-4);
+}
+
+/* 대상이 화면을 거의 다 차지할 때. 위아래 어디에도 자리가 없으면 아래에 붙인다 */
+.tour__card--pin {
+  bottom: calc(var(--sp-4) + env(safe-area-inset-bottom));
+}
+
+/* 모든 화면의 안내를 끈다. 눌릴 일이 드물어 오른쪽 아래 작은 글씨로 둔다 */
+.tour__off {
+  display: block;
+  margin: var(--sp-2) 0 calc(var(--sp-2) * -1) auto;
+  min-height: 36px;
+  padding: var(--sp-2) 0 0;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-3);
+}
