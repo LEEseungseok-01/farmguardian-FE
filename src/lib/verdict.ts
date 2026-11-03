@@ -229,11 +229,9 @@ export const sortVerdicts = (list: Verdict[]) =>
   [...list].sort((a, b) => LIST_ORDER.indexOf(a.status) - LIST_ORDER.indexOf(b.status) || a.drug.name.localeCompare(b.drug.name, 'ko'))
 
 /** 못 쓰는 약 대신 쓸 수 있는 약. 직전과 다른 계통을 앞에 둔다. */
-export function alternatives(v: Verdict, zone: Zone, pest: Pest, records: SprayRecord[], today: string) {
-  return registeredDrugs(zone, pest)
-    .filter((d) => d.id !== v.drug.id)
-    .map((d) => evaluate(d, zone, pest, records, today))
-    .filter((x) => x.status === 'ok' || x.status === 'caution')
+export function pickAlternatives(v: Verdict, all: Verdict[]) {
+  return all
+    .filter((x) => x.drug.id !== v.drug.id && (x.status === 'ok' || x.status === 'caution'))
     .sort(
       (a, b) =>
         PRIORITY[a.status] - PRIORITY[b.status] ||
@@ -241,6 +239,9 @@ export function alternatives(v: Verdict, zone: Zone, pest: Pest, records: SprayR
     )
     .slice(0, 3)
 }
+
+export const alternatives = (v: Verdict, zone: Zone, pest: Pest, records: SprayRecord[], today: string) =>
+  pickAlternatives(v, registeredDrugs(zone, pest).map((d) => evaluate(d, zone, pest, records, today)))
 
 const GROUP_ORDER = ['5', '28', '15', '6', '4a', '11a', '아5', '9b', '1b', '다4', '라4', '가4', '가1', '다3']
 

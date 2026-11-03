@@ -60,6 +60,8 @@ const pillWidth = (s: string) =>
 type Props = {
   zones: Zone[]
   selectedId?: string
+  /** 여러 구역을 한꺼번에 골라 둘 때 */
+  selectedIds?: string[]
   onSelect?: (id: string) => void
   /** 구역에 마우스를 올리거나 뗄 때. 뗐을 때는 null */
   onHover?: (id: string | null) => void
@@ -69,7 +71,7 @@ type Props = {
   ariaLabel: string
 }
 
-export function FieldMap({ zones, selectedId, onSelect, onHover, zoneLabel, style, className, ariaLabel }: Props) {
+export function FieldMap({ zones, selectedId, selectedIds, onSelect, onHover, zoneLabel, style, className, ariaLabel }: Props) {
   const interactive = !!(onSelect || onHover)
   const all = zones.flatMap((z) => z.points)
   const minX = Math.min(...all.map((p) => p[0]))
@@ -80,7 +82,8 @@ export function FieldMap({ zones, selectedId, onSelect, onHover, zoneLabel, styl
   const vbW = maxX - minX + pad * 2
   const vbH = maxY - minY + pad * 2
   const viewBox = `${minX - pad} ${minY - pad} ${vbW} ${vbH}`
-  const ordered = [...zones].sort((a, b) => Number(a.id === selectedId) - Number(b.id === selectedId))
+  const isSel = (id: string) => id === selectedId || !!selectedIds?.includes(id)
+  const ordered = [...zones].sort((a, b) => Number(isSel(a.id)) - Number(isSel(b.id)))
 
   // 배지와 글자는 지도 배율과 상관없이 화면에서 같은 크기로 보이게 한다
   const ref = useRef<SVGSVGElement>(null)
@@ -145,7 +148,7 @@ export function FieldMap({ zones, selectedId, onSelect, onHover, zoneLabel, styl
       </g>
 
       {ordered.map((z) => {
-        const sel = z.id === selectedId
+        const sel = isSel(z.id)
         const [cx, cy] = centroid(z.points)
         const d = toPath(z.points)
         const label = zoneLabel ? zoneLabel(z) : z.crop

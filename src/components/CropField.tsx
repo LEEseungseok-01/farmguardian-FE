@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { CROPS, POPULAR_CROPS, type Crop } from '../data/mock'
 import { matchKo } from '../lib/korean'
+import { useApp } from '../state/AppState'
 import { Icon } from './Icon'
 import { Sheet } from './Sheet'
 
@@ -41,11 +42,14 @@ export function CropField({ value, onPick, label = '작물' }: Props) {
 }
 
 function CropSheet({ initial, onClose, onDone }: { initial: Crop | null; onClose: () => void; onDone: (c: Crop) => void }) {
+  const { user, crops } = useApp()
+  const options = useMemo(() => (user ? CROPS.filter((c) => crops.some((x) => x.name === c)) : [...CROPS]), [user, crops])
   const [q, setQ] = useState('')
   const [sel, setSel] = useState<Crop | null>(initial)
   const query = q.trim()
-  const results = useMemo(() => CROPS.filter((c) => matchKo(c, query)), [query])
-  const rest = [...CROPS].filter((c) => !POPULAR_CROPS.includes(c)).sort((a, b) => a.localeCompare(b, 'ko'))
+  const results = useMemo(() => options.filter((c) => matchKo(c, query)), [options, query])
+  const popular = POPULAR_CROPS.filter((c) => options.includes(c))
+  const rest = options.filter((c) => !popular.includes(c)).sort((a, b) => a.localeCompare(b, 'ko'))
 
   const row = (c: Crop) => (
     <li key={c}>
@@ -104,7 +108,7 @@ function CropSheet({ initial, onClose, onDone }: { initial: Crop | null; onClose
         <>
           <p className="crop-group">고랭지에서 많이 심어요</p>
           <ul className="crop-list" role="listbox" aria-label="많이 심는 작물">
-            {POPULAR_CROPS.map(row)}
+            {popular.map(row)}
           </ul>
           <p className="crop-group">전체 작물</p>
           <ul className="crop-list" role="listbox" aria-label="전체 작물">
