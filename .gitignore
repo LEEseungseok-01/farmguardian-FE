@@ -19,3 +19,6 @@ vite.config.*.timestamp-*
 .env
 .env.*
 !.env.example
+
+# 내부 분석 문서. 레포가 공개라 올리지 않는다
+docs/api-mismatch.md

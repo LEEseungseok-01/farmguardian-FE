@@ -3,6 +3,7 @@ import { AppBar } from '../components/AppBar'
 import { BottomNav } from '../components/BottomNav'
 import { Icon } from '../components/Icon'
 import { DATA_SOURCE } from '../data/mock'
+import { resetTour } from '../components/Tour'
 import { useApp } from '../state/AppState'
 import './Settings.css'
 
@@ -31,6 +32,7 @@ const PRIVACY = [
   { name: '카카오 계정 식별자', how: '회원 식별과 로그인 유지' },
   { name: '밭 위치와 구역 정보', how: '구역별 판정과 이력 관리' },
   { name: '살포 이력', how: '사용 횟수와 작용기작 반복 집계' },
+  { name: '봉지 사진', how: '약 이름과 성분 읽기. 읽은 뒤 저장하지 않음' },
 ]
 
 export default function Settings() {
@@ -88,6 +90,22 @@ export default function Settings() {
 
         <section aria-labelledby="about-title">
           <h2 id="about-title" className="section-heading section-heading--sm">앱 정보</h2>
+
+          <button
+            type="button"
+            className="set-row"
+            onClick={() => {
+              resetTour()
+              navigate('/map')
+            }}
+          >
+            <Icon name="info" size={22} />
+            <span className="set-row__body">
+              <span className="set-row__name">사용법 다시 보기</span>
+              <span className="set-row__meta">화면마다 뜨던 처음 안내를 다시 켜요</span>
+            </span>
+            <Icon name="caret-right" size={18} />
+          </button>
 
           <details className="set-fold">
             <summary>
@@ -147,6 +165,9 @@ export default function Settings() {
             </ul>
             <p className="set-fold__note">
               살포 이력은 농약관리법상 증빙 자료로 보관하며, 취소한 기록도 삭제 없이 취소 상태로 보존합니다.
+            </p>
+            <p className="set-fold__note">
+              봉지 사진은 글자를 읽기 위해 외부 처리업체(Anthropic)로 전송하며, 읽은 뒤 사진은 보관하지 않습니다.
             </p>
           </details>
         </section>

@@ -154,3 +154,13 @@
   font-size: var(--fs-xs);
   color: var(--text-3);
 }
+
+/* 줄 하나짜리 바로가기를 버튼으로 쓸 때 */
+button.set-row {
+  width: 100%;
+  text-align: left;
+}
+
+.set-row + .set-fold {
+  margin-top: var(--sp-2);
+}
