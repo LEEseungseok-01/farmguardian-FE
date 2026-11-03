@@ -196,14 +196,10 @@ export default function Verdict() {
       </div>
 
       <div className="cta-bar">
-        {blocked && (
+        {blocked && !(v.atPlanting && v.status === 'preplant') && (
           <p className="cta-bar__note">
             <Icon name="lock-simple" size={18} />
-            {v.status === 'no'
-              ? '쓰면 안 되는 약은 기록할 수 없어요'
-              : v.atPlanting
-                ? '심을 때 쓰는 약은 살포 이력에서 기록해요'
-                : '심은 뒤에 기록할 수 있어요'}
+            {v.status === 'no' ? '쓰면 안 되는 약은 기록할 수 없어요' : '심은 뒤에 기록할 수 있어요'}
           </p>
         )}
         {/* 심을 때 쓰는 약은 여기서 기록할 길이 없으니, 막힌 버튼 대신 지난 기록 추가로 보낸다 */}
@@ -214,7 +210,7 @@ export default function Verdict() {
             onClick={() => navigate('/history', { state: { add: true } })}
           >
             <Icon name="note-pencil" size={22} weight="fill" />
-            지난 기록 추가
+            심을 때 뿌린 것으로 기록하기
           </button>
         ) : (
           <button
