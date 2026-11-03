@@ -58,7 +58,7 @@
   align-self: flex-start;
   padding: var(--sp-1) var(--sp-3);
   border-radius: var(--r-pill);
-  background: var(--no-solid);
+  background: var(--preplant-fg);
   color: var(--surface);
   font-size: var(--fs-md);
   font-weight: 700;
