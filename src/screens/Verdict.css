@@ -114,6 +114,13 @@
   color: var(--text-2);
 }
 
+.check__source {
+  display: block;
+  margin-top: var(--sp-1);
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
 /* 근거 표 */
 .facts {
   margin: 0;

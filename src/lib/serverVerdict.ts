@@ -9,6 +9,7 @@ type ServerCheck = {
   status: ServerStatus
   message: string
   facts: Record<string, unknown>
+  evidence: { source_text: string }
 }
 
 export type ServerPesticide = {
@@ -24,7 +25,7 @@ export type ServerPesticide = {
 /** GET /zones/{id}/judgments/preview 한 줄 */
 export type PreviewItem = { pesticide: ServerPesticide; result: { checks: ServerCheck[] } }
 
-// 서버 판정에는 「심을 때」가 따로 없다. 심은 날이 없으면 「확인 필요」로 온다
+// 서버 판정에는 「심을 때」가 따로 없다. 「확인 필요」에 붙은 facts.reason으로 만든다 (판정 규칙 §5)
 const STATUS: Record<ServerStatus, Status> = { OK: 'ok', CAUTION: 'caution', BLOCKED: 'no', NEEDS_CHECK: 'unknown' }
 const PRIORITY: Record<Status, number> = { no: 5, preplant: 4, unknown: 3, caution: 2, ok: 1 }
 const CHECK: Record<ServerCheck['key'], { key: CheckKey; label: string }> = {
@@ -72,11 +73,16 @@ export const toDrug = (p: ServerPesticide): Drug => ({
 export function toVerdict(item: PreviewItem): Verdict {
   const drug = toDrug(item.pesticide)
   const group = drug.group
-  const checks: Check[] = item.result.checks.map((c) => ({
-    ...CHECK[c.key],
-    status: STATUS[c.status],
-    text: c.message,
-  }))
+  const checks: Check[] = item.result.checks.map((c) => {
+    const check: Check = { ...CHECK[c.key], status: STATUS[c.status], text: c.message }
+    const reason = c.facts.reason
+    if (c.key === 'timing' && reason === 'at_planting') {
+      return { ...check, status: 'preplant', stateLabel: '심을 때', source: c.evidence.source_text }
+    }
+    if (reason === 'unreadable') return { ...check, source: c.evidence.source_text }
+    if (c.key === 'count' && reason === 'no_planting') return { ...check, status: 'preplant' }
+    return check
+  })
   const flagged = checks
     .filter((c) => c.status !== 'ok')
     .sort((a, b) => PRIORITY[b.status as Status] - PRIORITY[a.status as Status])
@@ -87,5 +93,6 @@ export function toVerdict(item: PreviewItem): Verdict {
     checks,
     reason: flagged[0] ? flagged[0].text : '네 가지 모두 통과했어요.',
     facts: factsOf(item.result.checks, group),
+    atPlanting: checks.some((c) => c.key === 'timing' && c.stateLabel === '심을 때'),
   }
 }

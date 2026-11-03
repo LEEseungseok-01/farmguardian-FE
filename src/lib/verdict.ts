@@ -25,7 +25,16 @@ const worst = (list: Status[]): Status =>
 
 export type CheckKey = 'reg' | 'timing' | 'count' | 'group'
 /** tag는 문장 앞에 칩으로 뜨는 짧은 상태말 */
-export type Check = { key: CheckKey; label: string; status: CheckStatus; text: string; tag?: string }
+/** stateLabel은 오른쪽 상태말을 바꿀 때, source는 문구 아래 따로 보여 줄 라벨 원문 */
+export type Check = {
+  key: CheckKey
+  label: string
+  status: CheckStatus
+  text: string
+  tag?: string
+  stateLabel?: string
+  source?: string
+}
 export type Fact = { label: string; value: string; sub?: string }
 
 export type Verdict = {
@@ -36,6 +45,8 @@ export type Verdict = {
   reasonTag?: string
   facts: Fact[]
   reg?: Registration
+  /** 심을 때 쓰는 약이라 「심을 때」가 된 판정 */
+  atPlanting?: boolean
 }
 
 const WATER_PER_M2 = 0.2 // 10아르당 200 L

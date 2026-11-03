@@ -86,14 +86,16 @@ export default function Verdict() {
             </span>
             <StatusBadge status={v.status} size="lg" />
           </div>
-          <h2 id="verdict-headline" className="verdict-hero__headline">{meta.headline}</h2>
+          <h2 id="verdict-headline" className="verdict-hero__headline">
+            {v.atPlanting && v.status === 'preplant' ? '심을 때 쓰는 약이에요' : meta.headline}
+          </h2>
           {v.status !== 'ok' && (
             <p className="verdict-hero__reason">
               {v.reasonTag && <ReasonTag>{v.reasonTag}</ReasonTag>}
               {v.reason}
             </p>
           )}
-          {v.status === 'preplant' && (
+          {v.status === 'preplant' && !v.atPlanting && (
             <Link to="/fields" className="verdict-hero__link">
               심은 날 입력하기
               <Icon name="caret-right" size={16} />
@@ -191,7 +193,11 @@ export default function Verdict() {
         {blocked && (
           <p className="cta-bar__note">
             <Icon name="lock-simple" size={18} />
-            {v.status === 'no' ? '쓰면 안 되는 약은 기록할 수 없어요' : '심은 뒤에 기록할 수 있어요'}
+            {v.status === 'no'
+              ? '쓰면 안 되는 약은 기록할 수 없어요'
+              : v.atPlanting
+                ? '심을 때 쓰는 약은 여기서 기록할 수 없어요'
+                : '심은 뒤에 기록할 수 있어요'}
           </p>
         )}
         <button
@@ -222,11 +228,12 @@ function CheckCell({ c }: { c: Check }) {
       <span className="check__head">
         <Icon name={m ? m.icon : 'minus'} weight="fill" size={22} />
         <span className="check__label">{c.label}</span>
-        <span className="check__state">{m ? m.check : '해당 없음'}</span>
+        <span className="check__state">{m ? (c.stateLabel ?? m.check) : '해당 없음'}</span>
       </span>
       <span className="check__text">
         {c.tag && <ReasonTag>{c.tag}</ReasonTag>}
         {c.text}
+        {c.source && <span className="check__source">원문: {c.source}</span>}
       </span>
     </li>
   )
