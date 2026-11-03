@@ -70,7 +70,8 @@ export const toDrug = (p: ServerPesticide): Drug => ({
   regs: [],
 })
 
-export function toVerdict(item: PreviewItem): Verdict {
+/** planted가 false면(심은 날 없음) 불가가 아닌 약은 모두 「심을 때」다 (연동 설계 결정 #10) */
+export function toVerdict(item: PreviewItem, planted = true): Verdict {
   const drug = toDrug(item.pesticide)
   const group = drug.group
   const checks: Check[] = item.result.checks.map((c) => {
@@ -86,12 +87,19 @@ export function toVerdict(item: PreviewItem): Verdict {
   const flagged = checks
     .filter((c) => c.status !== 'ok')
     .sort((a, b) => PRIORITY[b.status as Status] - PRIORITY[a.status as Status])
-  const status = flagged[0] ? (flagged[0].status as Status) : 'ok'
+  const worst = flagged[0] ? (flagged[0].status as Status) : 'ok'
+  const status: Status = !planted && worst !== 'no' ? 'preplant' : worst
+  const reason =
+    status === 'preplant' && worst !== 'preplant'
+      ? '심은 날을 넣으면 따져 드려요.'
+      : flagged[0]
+        ? flagged[0].text
+        : '네 가지 모두 통과했어요.'
   return {
     drug,
     status,
     checks,
-    reason: flagged[0] ? flagged[0].text : '네 가지 모두 통과했어요.',
+    reason,
     facts: factsOf(item.result.checks, group),
     atPlanting: checks.some((c) => c.key === 'timing' && c.stateLabel === '심을 때'),
   }

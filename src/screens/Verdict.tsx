@@ -38,7 +38,7 @@ export default function Verdict() {
       stale = true
     }
   }, [user, zone.id, pest?.id, drugId]) // eslint-disable-line react-hooks/exhaustive-deps
-  const sv = user ? (verdicts.find((x) => x.drug.id === drugId) ?? (judged ? toVerdict(judged) : undefined)) : undefined
+  const sv = user ? (verdicts.find((x) => x.drug.id === drugId) ?? (judged ? toVerdict(judged, !!zone.plantedAt) : undefined)) : undefined
   const drug = user ? sv?.drug : drugById(drugId)
 
   if (!drug || !pest) {
