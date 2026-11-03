@@ -206,19 +206,25 @@ export default function Verdict() {
                 : '심은 뒤에 기록할 수 있어요'}
           </p>
         )}
-        <button
-          type="button"
-          className="btn btn--primary btn--lg"
-          disabled={blocked || doneToday}
-          onClick={record}
-        >
-          <Icon name={doneToday ? 'check-circle' : 'note-pencil'} size={22} weight="fill" />
-          {doneToday ? '오늘 기록했어요' : '오늘 뿌린 것으로 기록하기'}
-        </button>
-        {v.atPlanting && v.status === 'preplant' && (
-          <button type="button" className="text-btn cta-bar__link" onClick={() => navigate('/history', { state: { add: true } })}>
+        {/* 심을 때 쓰는 약은 여기서 기록할 길이 없으니, 막힌 버튼 대신 지난 기록 추가로 보낸다 */}
+        {v.atPlanting && v.status === 'preplant' ? (
+          <button
+            type="button"
+            className="btn btn--soft btn--lg"
+            onClick={() => navigate('/history', { state: { add: true } })}
+          >
+            <Icon name="note-pencil" size={22} weight="fill" />
             지난 기록 추가
-            <Icon name="caret-right" size={16} />
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="btn btn--primary btn--lg"
+            disabled={blocked || doneToday}
+            onClick={record}
+          >
+            <Icon name={doneToday ? 'check-circle' : 'note-pencil'} size={22} weight="fill" />
+            {doneToday ? '오늘 기록했어요' : '오늘 뿌린 것으로 기록하기'}
           </button>
         )}
         {doneToday && (
