@@ -190,7 +190,7 @@ const GUIDE: { title: string; body: () => React.ReactNode }[] = [
           ))}
         </ul>
         <p className="why__src">
-          <span>농촌진흥청 PSIS(2026.10)</span>
+          <span>농촌진흥청 PSIS(2026.11)</span>
           <span>한국농촌경제연구원 R867(2019)</span>
         </p>
       </>
