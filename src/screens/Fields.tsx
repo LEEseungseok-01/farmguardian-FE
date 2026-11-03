@@ -142,7 +142,7 @@ export default function Fields() {
                     <input
                       className="input input--title"
                       value={z.name}
-                      maxLength={10}
+                      maxLength={30}
                       placeholder="예: 개울가"
                       onChange={(e) => updateZone(z.id, { name: e.target.value })}
                       onBlur={(e) => !e.target.value.trim() && updateZone(z.id, { name: '이름 없는 구역' })}
@@ -161,6 +161,7 @@ export default function Fields() {
                         type="date"
                         className="input"
                         value={z.plantedAt ?? ''}
+                        max={today}
                         onChange={(e) => updateZone(z.id, { plantedAt: e.target.value || null })}
                       />
                     </label>
@@ -229,7 +230,7 @@ export default function Fields() {
         {pending && (
           <p>
             {user && pending.type === 'crop' ? (
-              '기록은 그대로 두고 새 작기로 봐요. 수확 예정일은 비워져요.'
+              '기록은 그대로 두고 새 작기로 봐요. 심은 날과 수확 예정일은 비워지고, 「누락 없음」도 다시 확인해야 해요.'
             ) : pending.count > 0 ? (
               <>
                 이 구역의 살포 기록 {pending.count}건도 함께 삭제돼요.

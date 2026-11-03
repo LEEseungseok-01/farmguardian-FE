@@ -322,7 +322,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       body: merged,
       timer: window.setTimeout(() => {
         delete pending.current[id]
-        savePatch(id, merged)
+        // 구역 고침은 저장 버튼 없이 자동 저장되므로, 저장된 것을 알린다
+        savePatch(id, merged).then((ok) => ok && showToast({ text: '저장했어요' }))
       }, 500),
     }
   }
