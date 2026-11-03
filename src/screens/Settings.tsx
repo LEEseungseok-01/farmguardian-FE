@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AppBar } from '../components/AppBar'
 import { BottomNav } from '../components/BottomNav'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Icon } from '../components/Icon'
 import { DATA_SOURCE } from '../data/mock'
 import { useApp } from '../state/AppState'
@@ -28,13 +30,14 @@ const SOURCES = [
 ]
 
 const PRIVACY = [
-  { name: '카카오 계정 식별자', how: '회원 식별과 로그인 유지' },
+  { name: '아이디와 비밀번호', how: '회원 식별과 로그인 유지' },
   { name: '밭 위치와 구역 정보', how: '구역별 판정과 이력 관리' },
   { name: '살포 이력', how: '사용 횟수와 작용기작 반복 집계' },
 ]
 
 export default function Settings() {
-  const { signedIn, signOut, farms, zones, showToast } = useApp()
+  const { user, signedIn, signOut, withdraw, farms, zones, showToast } = useApp()
+  const [leaving, setLeaving] = useState(false)
   const navigate = useNavigate()
 
   return (
@@ -47,7 +50,7 @@ export default function Settings() {
           <div className="set-card">
             <p className="set-card__state">
               <Icon name={signedIn ? 'check-circle' : 'info'} weight={signedIn ? 'fill' : 'regular'} size={22} />
-              {signedIn ? '카카오로 로그인했어요' : '로그인하지 않고 둘러보는 중이에요'}
+              {user ? `${user.username} 계정으로 로그인했어요` : '로그인하지 않고 둘러보는 중이에요'}
             </p>
             <p className="set-card__hint">
               {signedIn
@@ -67,12 +70,18 @@ export default function Settings() {
                 로그아웃
               </button>
             ) : (
-              <button type="button" className="btn btn--kakao" onClick={() => navigate('/')}>
-                카카오로 로그인
+              <button type="button" className="btn btn--primary" onClick={() => navigate('/')}>
+                회원가입
               </button>
             )}
           </div>
         </section>
+
+        {signedIn && (
+          <button type="button" className="btn btn--ghost" onClick={() => setLeaving(true)}>
+            회원 탈퇴
+          </button>
+        )}
 
         <section aria-labelledby="farm-title">
           <h2 id="farm-title" className="section-heading section-heading--sm">내 밭</h2>
@@ -153,6 +162,24 @@ export default function Settings() {
 
         <p className="set-ver">팜가디언 1.0.0</p>
       </div>
+
+      <ConfirmDialog
+        open={leaving}
+        danger
+        title="회원 탈퇴할까요?"
+        confirmLabel="탈퇴하기"
+        onConfirm={async () => {
+          setLeaving(false)
+          if (await withdraw()) showToast({ text: '탈퇴했어요' })
+        }}
+        onCancel={() => setLeaving(false)}
+      >
+        <p>
+          밭과 구역, 살포 기록이 모두 지워져요.
+          <br />
+          <strong>삭제한 정보는 복구할 수 없어요.</strong>
+        </p>
+      </ConfirmDialog>
 
       <BottomNav />
     </div>

@@ -5,8 +5,11 @@ import { Icon } from './Icon'
 /** 열두 달 막대. 생기는 달은 옅게, 많이 생기는 달은 진하게, 이번 달은 표시한다. */
 export function MonthBar({ pest, month }: { pest: Pest; month: number }) {
   const months = Array.from({ length: 12 }, (_, i) => i + 1)
-  const peak = pest.peak
-  const range = `${Math.min(...peak)}~${Math.max(...peak)}월`
+  // 많이 생기는 달 구분이 없는 자료는 생기는 달 전체를 보여 준다
+  const span = pest.peak.length ? pest.peak : pest.months
+  const label = span.length
+    ? `${pest.peak.length ? '많이 생기는 때' : '생기는 때'} ${Math.min(...span)}~${Math.max(...span)}월`
+    : '발생 시기 자료 없음'
   return (
     <div className="monthbar">
       <div className="monthbar__track" aria-hidden="true">
@@ -16,7 +19,7 @@ export function MonthBar({ pest, month }: { pest: Pest; month: number }) {
             className={[
               'monthbar__cell',
               pest.months.includes(m) ? 'is-on' : '',
-              peak.includes(m) ? 'is-peak' : '',
+              pest.peak.includes(m) ? 'is-peak' : '',
               m === month ? 'is-now' : '',
             ].join(' ')}
           />
@@ -27,7 +30,7 @@ export function MonthBar({ pest, month }: { pest: Pest; month: number }) {
           <span key={m}>{m % 3 === 1 ? m : ''}</span>
         ))}
       </div>
-      <span className="monthbar__label">많이 생기는 때 {range}</span>
+      <span className="monthbar__label">{label}</span>
     </div>
   )
 }
@@ -48,7 +51,7 @@ export function PestPhoto({ pest, size = 64 }: { pest: Pest; size?: number }) {
   const [failed, setFailed] = useState(false)
   return (
     <span className={`pest-photo pest-photo--${pest.kind === '벌레' ? 'bug' : 'disease'}`} style={{ width: size, height: size }}>
-      {failed ? (
+      {failed || !pest.photo ? (
         <Icon name={pest.kind === '벌레' ? 'bug' : pest.kind === '바이러스' ? 'virus' : 'leaf'} size={Math.round(size * 0.45)} label={`${pest.name} 그림`} />
       ) : (
         <img

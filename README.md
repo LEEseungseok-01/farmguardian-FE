@@ -13,7 +13,7 @@
 
 ```bash
 npm install
-npm run dev     # http://localhost:8443
+npm run dev     # http://localhost:3000
 ```
 
 빌드는 `npm run build`, 미리보기는 `npm run preview`.
@@ -37,7 +37,7 @@ npm run dev     # http://localhost:8443
 화면은 `src/screens/`에 아홉 개.
 
 ```
-Login       랜딩 + 카카오 로그인
+Login       랜딩 + 회원가입 (아이디·비밀번호·팜맵 필지)
 MapHome     첫 화면. 밭 지도 + 아래 시트
 PestSelect  병해충 고르기
 DrugList    그 병해충에 등록된 약 목록 (판정 붙은 채로)

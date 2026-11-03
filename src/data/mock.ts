@@ -37,8 +37,12 @@ export type Zone = {
   /** 농가가 직접 붙인 구역 이름 */
   name: string
   crop: Crop
+  /** BE의 작물 번호. 예시 데이터에는 없다 */
+  cropId?: number
   plantedAt: string | null
   plannedAt?: string
+  /** 「누락 없음」 확인을 마쳤는지. 예시 데이터에는 없다 */
+  historyConfirmed?: boolean
   harvestAt: string | null
   areaM2: number
   points: Point[]
@@ -58,6 +62,8 @@ export type Pest = {
   carries?: string
   /** 바이러스병일 때 옮기는 벌레 */
   carrier?: string
+  /** 이 작물에 등록된 약 수. BE가 알려 준다 (예시 데이터는 직접 센다) */
+  drugCount?: number
 }
 
 export type Registration = {
@@ -92,6 +98,8 @@ export type SprayRecord = {
   pestId: string
   cancelled?: boolean
   manual?: boolean
+  /** BE 기록은 약 정보를 같이 들고 온다. 예시 기록은 drugId로 찾는다 */
+  drug?: Drug
 }
 
 export const FARMS: Farm[] = [
@@ -379,5 +387,6 @@ export const ADDRESS_BOOK = [
 ]
 
 export const drugById = (id: string) => DRUGS.find((d) => d.id === id)
+export const drugOf = (r: SprayRecord) => r.drug ?? drugById(r.drugId)
 export const pestById = (id: string) => PESTS.find((p) => p.id === id)
 export const zoneName = (z: Pick<Zone, 'name'>) => z.name

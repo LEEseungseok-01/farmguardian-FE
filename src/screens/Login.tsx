@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { FeatureArt, type FeatureKind } from '../components/FeatureArt'
 import { FieldMap } from '../components/FieldMap'
-import { CustomIcon, Icon } from '../components/Icon'
+import { Icon } from '../components/Icon'
+import { LoginSheet } from '../components/LoginSheet'
 import type { IconName } from '../components/iconPaths'
 import { Wordmark } from '../components/Logo'
 import { ProductArt } from '../components/ProductArt'
+import { Sheet } from '../components/Sheet'
+import { SignupSheet } from '../components/SignupSheet'
 import { StatusBadge } from '../components/StatusBadge'
 import { ZONES, drugById } from '../data/mock'
 import type { CheckStatus, Status } from '../lib/verdict'
-import { useApp } from '../state/AppState'
 import './Login.css'
 
 const FEATURES: { kind: FeatureKind; title: string; body: string; wide?: boolean }[] = [
@@ -80,8 +81,9 @@ const FLOW: { title: string; body: string }[] = [
 ]
 
 export default function Login() {
-  const navigate = useNavigate()
-  const { signIn } = useApp()
+  const [signingUp, setSigningUp] = useState(false)
+  const [loggingIn, setLoggingIn] = useState(false)
+  const [guide, setGuide] = useState(false)
   const [active, setActive] = useState<string | null>(null)
   const [last, setLast] = useState('z-a')
   const [touched, setTouched] = useState(false)
@@ -93,24 +95,6 @@ export default function Login() {
       setTouched(true)
     }
   }
-
-  // 화면에 들어온 것부터 올라오게 한다. IntersectionObserver는 빠르게 튕겨 내리면
-  // 지나친 요소를 한 번도 알려주지 않아서, 스크롤마다 직접 훑는다.
-  useEffect(() => {
-    const left = [...document.querySelectorAll<HTMLElement>('[data-reveal]')]
-    const sweep = () => {
-      for (let i = left.length - 1; i >= 0; i--) {
-        if (left[i].getBoundingClientRect().top < window.innerHeight - 40) {
-          left[i].classList.add('is-in')
-          left.splice(i, 1)
-        }
-      }
-      if (!left.length) window.removeEventListener('scroll', sweep)
-    }
-    sweep()
-    window.addEventListener('scroll', sweep, { passive: true })
-    return () => window.removeEventListener('scroll', sweep)
-  }, [])
 
   const demo = ZONE_DEMO[last]
   const drug = drugById(demo.drugId)!
@@ -128,16 +112,6 @@ export default function Login() {
           <br />
           <em>안전하게</em> 결정하세요.
         </h1>
-        <p className="login__lead">사용해도 되는지 대신 확인해드려요!</p>
-        <ol className="login__steps" aria-label="확인하는 네 가지">
-          {STEPS.map((s, i) => (
-            <li key={s.name}>
-              <span className="login__step-num">{i + 1}</span>
-              <span className="login__step-name">{s.name}</span>
-              <span className="login__step-ask">{s.ask}</span>
-            </li>
-          ))}
-        </ol>
 
         <figure className="login__photo">
           <FieldMap
@@ -180,28 +154,35 @@ export default function Login() {
       </section>
 
       <div className="login__actions">
-        <button
-          type="button"
-          className="btn btn--kakao btn--lg"
-          onClick={() => {
-            signIn()
-            navigate('/map')
-          }}
-        >
-          <CustomIcon name="kakao" size={22} />
-          카카오로 시작하기
+        <button type="button" className="btn btn--ghost login__signup" onClick={() => setSigningUp(true)}>
+          계정이 없어요
         </button>
-        <button type="button" className="btn btn--outline btn--lg" onClick={() => navigate('/map')}>
-          먼저 둘러볼게요
+        <button type="button" className="btn btn--primary btn--lg" onClick={() => setLoggingIn(true)}>
+          로그인
+        </button>
+        <button type="button" className="btn btn--outline btn--lg" onClick={() => setGuide(true)}>
+          어떻게 쓰는 건가요?
           <Icon name="arrow-right" size={20} />
         </button>
-        <p className="login__note">가입 없이 모든 기능을 써 볼 수 있어요!</p>
       </div>
 
-      <section className="login__features" aria-label="왜 만들었나">
+      {guide && <GuideSheet onClose={() => setGuide(false)} />}
+
+      {loggingIn && <LoginSheet onClose={() => setLoggingIn(false)} />}
+
+      {signingUp && <SignupSheet onClose={() => setSigningUp(false)} />}
+    </main>
+  )
+}
+
+const GUIDE: { title: string; body: () => React.ReactNode }[] = [
+  {
+    title: '왜 만들었나',
+    body: () => (
+      <>
         <ul className="why">
-          {FACTS.map((f, i) => (
-            <li key={f.label} data-reveal="" style={{ ['--d' as string]: `${i * 80}ms` }}>
+          {FACTS.map((f) => (
+            <li key={f.label}>
               <span className="why__l">{f.label}</span>
               <span className="why__v">{f.value}</span>
               <span className="why__n">{f.note}</span>
@@ -212,53 +193,83 @@ export default function Login() {
           <span>농촌진흥청 PSIS(2026.10)</span>
           <span>한국농촌경제연구원 R867(2019)</span>
         </p>
-      </section>
+      </>
+    ),
+  },
+  {
+    title: '대신 해 주는 일',
+    body: () => (
+      <ul className="bento">
+        {FEATURES.map((f) => (
+          <li key={f.kind} className={`bento__card${f.wide ? ' bento__card--wide' : ''}`}>
+            <div className="bento__text">
+              <h3 className="bento__title">{f.title}</h3>
+              <p className="bento__body">{f.body}</p>
+            </div>
+            <FeatureArt kind={f.kind} size={f.wide ? 76 : 64} />
+          </li>
+        ))}
+      </ul>
+    ),
+  },
+  {
+    title: '판정 다섯 가지',
+    body: () => (
+      <ul className="vlist">
+        {VERDICTS.map((v) => (
+          <li key={v.status}>
+            <StatusBadge status={v.status} />
+            <span>{v.text}</span>
+          </li>
+        ))}
+      </ul>
+    ),
+  },
+  {
+    title: '쓰는 순서',
+    body: () => (
+      <ol className="flow">
+        {FLOW.map((f, i) => (
+          <li key={f.title}>
+            <span className="flow__n">{i + 1}</span>
+            <span className="flow__t">{f.title}</span>
+            <span className="flow__b">{f.body}</span>
+          </li>
+        ))}
+      </ol>
+    ),
+  },
+]
 
-      <section className="login__features" aria-labelledby="features-title">
-        <h2 id="features-title" className="section-heading">대신 해 주는 일</h2>
-        <ul className="bento">
-          {FEATURES.map((f, i) => (
-            <li
-              key={f.kind}
-              data-reveal=""
-              className={`bento__card${f.wide ? ' bento__card--wide' : ''}`}
-              style={{ ['--d' as string]: `${i * 80}ms` }}
-            >
-              <div className="bento__text">
-                <h3 className="bento__title">{f.title}</h3>
-                <p className="bento__body">{f.body}</p>
-              </div>
-              <FeatureArt kind={f.kind} size={f.wide ? 76 : 64} />
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="login__features" aria-labelledby="verdict-title">
-        <h2 id="verdict-title" className="section-heading">판정 다섯 가지</h2>
-        <ul className="vlist">
-          {VERDICTS.map((v, i) => (
-            <li key={v.status} data-reveal="" style={{ ['--d' as string]: `${i * 60}ms` }}>
-              <StatusBadge status={v.status} />
-              <span>{v.text}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="login__features" aria-labelledby="flow-title">
-        <h2 id="flow-title" className="section-heading">쓰는 순서</h2>
-        <ol className="flow">
-          {FLOW.map((f, i) => (
-            <li key={f.title} data-reveal="" style={{ ['--d' as string]: `${i * 80}ms` }}>
-              <span className="flow__n">{i + 1}</span>
-              <span className="flow__t">{f.title}</span>
-              <span className="flow__b">{f.body}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-    </main>
+/** 처음 온 사람에게 한 장씩 보여 주는 사용 안내 */
+function GuideSheet({ onClose }: { onClose: () => void }) {
+  const [page, setPage] = useState(0)
+  const last = page === GUIDE.length - 1
+  return (
+    <Sheet
+      open
+      tall
+      onClose={onClose}
+      title={GUIDE[page].title}
+      footer={
+        <div className="sheet-actions sheet-actions--row">
+          {page > 0 && (
+            <button type="button" className="btn btn--ghost" onClick={() => setPage(page - 1)}>
+              이전
+            </button>
+          )}
+          <button type="button" className="btn btn--primary btn--lg" onClick={last ? onClose : () => setPage(page + 1)}>
+            {last ? '알겠어요' : '다음'}
+          </button>
+        </div>
+      }
+    >
+      <ol className="stepper stepper--4" aria-hidden="true">
+        {GUIDE.map((g, i) => (
+          <li key={g.title} className={i <= page ? 'is-on' : ''} />
+        ))}
+      </ol>
+      {GUIDE[page].body()}
+    </Sheet>
   )
 }

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AppBar } from '../components/AppBar'
 import { DrugCard, GroupChip, ReasonTag } from '../components/DrugCard'
@@ -7,16 +8,38 @@ import { StatusBadge } from '../components/StatusBadge'
 import { DATA_SOURCE, drugById, zoneName } from '../data/mock'
 import { fmtFull } from '../lib/date'
 import { eul } from '../lib/korean'
-import { STATUS_META, alternatives, evaluate, type Check } from '../lib/verdict'
+import { STATUS_META, alternatives, evaluate, pickAlternatives, type Check } from '../lib/verdict'
+import { api } from '../lib/api'
+import { toVerdict, type PreviewItem } from '../lib/serverVerdict'
+import { useVerdicts } from '../lib/useVerdicts'
 import { useApp } from '../state/AppState'
 import './Verdict.css'
 
 export default function Verdict() {
   const { drugId = '' } = useParams()
   const navigate = useNavigate()
-  const { zone, pestOf, records, today, addRecord, showToast, inventory, toggleInventory } = useApp()
-  const drug = drugById(drugId)
+  const { user, zone, pestOf, records, today, addRecord, showToast, inventory, toggleInventory } = useApp()
   const pest = pestOf(zone)
+  const { verdicts, loading } = useVerdicts(zone, pest)
+  // 로그인했으면 판정을 서버에 맡긴다. 판정 실행은 결과를 저장하고, 목록에 없는 약(포장지로 찾은 약)도 따져 준다
+  const [judged, setJudged] = useState<(PreviewItem & { show_extension_office: boolean; result: { notices: string[] } }) | null>(null)
+  useEffect(() => {
+    setJudged(null)
+    if (!user || !pest) return
+    let stale = false
+    api<NonNullable<typeof judged>>(`/zones/${zone.id}/judgments`, {
+      method: 'POST',
+      body: JSON.stringify({ pesticide_id: Number(drugId), pest_id: Number(pest.id) }),
+    }).then(
+      (r) => !stale && setJudged(r),
+      () => {},
+    )
+    return () => {
+      stale = true
+    }
+  }, [user, zone.id, pest?.id, drugId]) // eslint-disable-line react-hooks/exhaustive-deps
+  const sv = user ? (verdicts.find((x) => x.drug.id === drugId) ?? (judged ? toVerdict(judged) : undefined)) : undefined
+  const drug = user ? sv?.drug : drugById(drugId)
 
   if (!drug || !pest) {
     return (
@@ -25,7 +48,7 @@ export default function Verdict() {
         <div className="page__body">
           <div className="empty">
             <Icon name="question" size={32} />
-            <p>{drug ? `아직 ${zone.crop} 병해충 자료가 없어요` : '약을 찾을 수 없어요'}</p>
+            <p>{loading && !judged ? '판정을 불러오는 중이에요' : drug ? `아직 ${zone.crop} 병해충 자료가 없어요` : '약을 찾을 수 없어요'}</p>
             <Link to="/drugs" className="btn btn--soft">약 목록 보기</Link>
           </div>
         </div>
@@ -33,16 +56,22 @@ export default function Verdict() {
     )
   }
 
-  const v = evaluate(drug, zone, pest, records, today)
+  const v = user ? sv! : evaluate(drug, zone, pest, records, today)
   const meta = STATUS_META[v.status]
   const inStock = inventory.includes(v.drug.id)
-  const alts = v.status === 'no' || v.status === 'unknown' ? alternatives(v, zone, pest, records, today) : []
+  const alts =
+    v.status === 'no' || v.status === 'unknown'
+      ? user
+        ? pickAlternatives(v, verdicts)
+        : alternatives(v, zone, pest, records, today)
+      : []
   const doneToday = records.some((r) => !r.cancelled && r.date === today && r.zoneId === zone.id && r.drugId === drug.id)
   const blocked = v.status === 'no' || v.status === 'preplant'
 
-  const record = () => {
-    addRecord({ date: today, zoneId: zone.id, drugId: drug.id, pestId: pest.id })
-    showToast({ text: `${eul(drug.name)} 기록했어요`, actionLabel: '보기', actionTo: '/history' })
+  const record = async () => {
+    if (await addRecord({ date: today, zoneId: zone.id, drugId: drug.id, pestId: pest.id })) {
+      showToast({ text: `${eul(drug.name)} 기록했어요`, actionLabel: '보기', actionTo: '/history' })
+    }
   }
 
   return (
@@ -94,13 +123,22 @@ export default function Verdict() {
               </div>
             ))}
           </dl>
+          {user && judged && (judged.result.notices.length > 0 || judged.show_extension_office) && (
+            <ul className="muted-box">
+              {judged.result.notices.map((n) => (
+                <li key={n}>{n}</li>
+              ))}
+              {judged.show_extension_office && <li>가까운 농업기술센터에 물어보세요.</li>}
+            </ul>
+          )}
           <button
             type="button"
             className={`stock-btn${inStock ? ' is-on' : ''}`}
             aria-pressed={inStock}
-            onClick={() => {
-              toggleInventory(v.drug.id)
-              showToast({ text: inStock ? `${v.drug.name} 창고에서 뺐어요` : `${v.drug.name} 창고에 넣었어요` })
+            onClick={async () => {
+              if (await toggleInventory(v.drug.id)) {
+                showToast({ text: inStock ? `${v.drug.name} 창고에서 뺐어요` : `${v.drug.name} 창고에 넣었어요` })
+              }
             }}
           >
             <Icon name="package" size={20} weight={inStock ? 'fill' : 'regular'} />
