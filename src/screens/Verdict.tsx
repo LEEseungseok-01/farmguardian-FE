@@ -90,7 +90,11 @@ export default function Verdict() {
             {v.atPlanting && v.status === 'preplant' ? '심을 때 쓰는 약이에요' : meta.headline}
           </h2>
           {/* 심을 때 쓰는 약은 제목이 이유라 같은 문장을 다시 쓰지 않는다. 자세한 설명과 원문은 시기 칸에 있다 */}
-          {v.atPlanting && v.status === 'preplant' && <p className="verdict-hero__notnow">지금은 쓸 수 없어요</p>}
+          {v.atPlanting && v.status === 'preplant' && (
+            <p className="verdict-hero__notnow">
+              {zone.plantedAt ? '이미 심은 구역이라 지금은 쓸 수 없어요' : '심는 날에만 쓸 수 있어요'}
+            </p>
+          )}
           {v.status !== 'ok' && !(v.atPlanting && v.status === 'preplant') && (
             <p className="verdict-hero__reason">
               {v.reasonTag && <ReasonTag>{v.reasonTag}</ReasonTag>}
