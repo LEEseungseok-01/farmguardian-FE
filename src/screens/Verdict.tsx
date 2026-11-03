@@ -210,7 +210,7 @@ export default function Verdict() {
             onClick={() => navigate('/history', { state: { add: true } })}
           >
             <Icon name="note-pencil" size={22} weight="fill" />
-            심을 때 뿌린 것으로 기록하기
+            심을 때 뿌린 약으로 기록하기
           </button>
         ) : (
           <button
@@ -220,7 +220,7 @@ export default function Verdict() {
             onClick={record}
           >
             <Icon name={doneToday ? 'check-circle' : 'note-pencil'} size={22} weight="fill" />
-            {doneToday ? '오늘 기록했어요' : '오늘 뿌린 것으로 기록하기'}
+            {doneToday ? '오늘 기록했어요' : '오늘 뿌린 약으로 기록하기'}
           </button>
         )}
         {doneToday && (
