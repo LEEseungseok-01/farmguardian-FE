@@ -229,12 +229,12 @@ export default function ScanSheet() {
               ) : (
                 <ReadLines lines={shown?.lines ?? []} />
               )}
-              <button type="button" className="text-btn" onClick={() => setPhase('idle')}>
-                <Icon name="arrow-counter-clockwise" size={16} />
-                다시 찍기
-              </button>
             </div>
           </div>
+          <button type="button" className="text-btn scan-retry" onClick={() => setPhase('idle')}>
+            <Icon name="arrow-counter-clockwise" size={16} />
+            다시 찍기
+          </button>
 
           {phase === 'done' && error && (
             <p className="signup-error" role="alert">
