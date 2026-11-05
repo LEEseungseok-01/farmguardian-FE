@@ -5,6 +5,7 @@ import { CompanyMark, ProductArt } from '../components/ProductArt'
 import { Sheet } from '../components/Sheet'
 import { SCAN_RESULT, drugById, type Drug } from '../data/mock'
 import { api } from '../lib/api'
+import { shrinkImage } from '../lib/shrinkImage'
 import { toDrug, type ServerPesticide } from '../lib/serverVerdict'
 import { useApp } from '../state/AppState'
 import { groupColor, groupLabel } from '../lib/verdict'
@@ -18,6 +19,14 @@ type OcrResult = {
   candidates: { pesticide: ServerPesticide; matched: string[] }[]
   read: { brand: string | null; product: string | null; company: string | null; text: string }
 }
+
+// 약이 없는 시연장에서도 실제 OCR을 해 볼 수 있는 봉지 사진
+const SAMPLES = [
+  { name: '베네비아', src: '/samples/benevia.png' },
+  { name: '델리게이트', src: '/samples/delegate.png' },
+  { name: '라이몬', src: '/samples/raimon.png' },
+]
+const CABBAGE_DIAMONDBACK_MOTH = '48' // 세 약이 모두 등록된 배추 병해충
 
 const FIELD = { brand: '상표', product: '품목', company: '제조사' } as Record<string, string>
 
@@ -40,7 +49,7 @@ function fromOcr(r: OcrResult): Scan {
 
 export default function ScanSheet() {
   const navigate = useNavigate()
-  const { user } = useApp()
+  const { user, zone, selectPest } = useApp()
   const [scan, setScan] = useState<Scan | null>(null)
   const [error, setError] = useState('')
   const [phase, setPhase] = useState<Phase>('idle')
@@ -78,13 +87,27 @@ export default function ScanSheet() {
     setError('')
     setScan(null)
     const form = new FormData()
-    form.append('image', file)
+    form.append('image', await shrinkImage(file))
     try {
       setScan(fromOcr(await api<OcrResult>('/ocr/pesticide-labels', { method: 'POST', body: form })))
     } catch (e) {
       setError((e as Error).message)
     }
     setPhase('done')
+  }
+
+  const startSample = async (src: string) => {
+    start(src)
+    setError('')
+    setScan(null)
+    if (zone.crop === '배추') selectPest(CABBAGE_DIAMONDBACK_MOTH)
+    try {
+      const blob = await (await fetch(src)).blob()
+      await read(new File([blob], 'sample.png', { type: blob.type }))
+    } catch {
+      setError('예시 사진을 불러오지 못했어요')
+      setPhase('done')
+    }
   }
 
   const shown = user ? scan : SAMPLE
@@ -146,6 +169,19 @@ export default function ScanSheet() {
               앨범에서 가져오기
             </button>
           </div>
+          {user && (
+            <div className="scan-samples">
+              <p className="scan-samples__title">약이 없으면 예시 사진으로 해 보세요</p>
+              <div className="scan-samples__list">
+                {SAMPLES.map((s) => (
+                  <button key={s.src} type="button" className="scan-sample" onClick={() => startSample(s.src)}>
+                    <img src={s.src} alt="" />
+                    <span>{s.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {!user && (
             <button type="button" className="text-btn" onClick={() => start('sample')}>
               예시 사진으로 해 보기
