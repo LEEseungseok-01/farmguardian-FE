@@ -197,8 +197,7 @@ export default function Dashboard() {
               <Icon name="caret-down" size={18} />
             </summary>
             <p className="nbr__why">
-              <span className="nbr__line">벌레는 옆 밭으로도 옮겨 다녀요.</span>
-              <span className="nbr__line">이웃 농가와 같은 그룹의 약을 자주 쓰면 내 밭에서 약이 잘 듣지 않을 수 있어요.</span>
+              벌레는 옆 밭으로도 옮겨 다녀요. 이웃 농가와 같은 그룹의 약을 자주 쓰면 내 밭에서 약이 잘 듣지 않을 수 있어요.
             </p>
             <p className="nbr__flag">
               <Icon name={overlap ? 'warning' : 'check-circle'} weight="fill" size={18} />
@@ -230,8 +229,7 @@ export default function Dashboard() {
               ))}
             </ul>
             <p className="fine">
-              <span className="nbr__line">막대가 길수록 그 면의 농가들이 같은 그룹 약을 많이 썼다는 뜻이에요</span>
-              <span className="nbr__line">({county} {zone.crop} 농가 {num(regionFarms)}곳 기준)</span>
+              ({county} {zone.crop} 농가 {num(regionFarms)}곳 기준)
             </p>
           </details>
         )}
