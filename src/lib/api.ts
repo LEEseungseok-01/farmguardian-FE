@@ -17,11 +17,14 @@ const errorText = (error?: ApiError) => {
   return error?.message ?? '요청에 실패했어요'
 }
 
+// 개발 때는 비워 두고 Vite 프록시를 쓴다. 배포하면 백엔드 주소를 넣는다
+const BASE_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+
 /** BE를 부른다. 실패하면 BE가 준 오류 문구를 Error로 던진다 */
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
-    res = await fetch(path, {
+    res = await fetch(`${BASE_URL}${path}`, {
       ...init,
       headers: {
         Accept: 'application/json',
