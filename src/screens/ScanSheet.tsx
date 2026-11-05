@@ -130,7 +130,12 @@ export default function ScanSheet() {
             disabled={!pickedDrug}
             onClick={() => pickedDrug && navigate(`/verdict/${pickedDrug.id}`)}
           >
-            {pickedDrug ? (
+            {phase === 'reading' ? (
+              <>
+                <span className="scan-foot__spinner" aria-hidden="true" />
+                분석 중
+              </>
+            ) : pickedDrug ? (
               <>
                 <Icon name="seal-check" size={22} weight="fill" />
                 {ro(pickedDrug.name)} 판정하기
