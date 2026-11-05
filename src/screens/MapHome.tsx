@@ -29,7 +29,10 @@ export default function MapHome() {
   useLayoutEffect(() => {
     const measure = () => {
       const top = topRef.current?.getBoundingClientRect().bottom ?? 180
-      const sheetTop = sheetRef.current?.getBoundingClientRect().top ?? window.innerHeight - 440
+      // 움직이는 중의 위치가 아니라 멈출 위치를 재서, 지도가 시트와 함께 움직이게 한다
+      const el = sheetRef.current
+      const closed = parseFloat(el?.style.getPropertyValue('--closed') ?? '') || 0
+      const sheetTop = el ? el.offsetTop + (sheet === 'min' ? closed : 0) : window.innerHeight - 440
       setInset({ top: top + 8, bottom: window.innerHeight - sheetTop + 4 })
     }
     measure()
@@ -41,7 +44,7 @@ export default function MapHome() {
       ro.disconnect()
       window.removeEventListener('resize', measure)
     }
-  }, [])
+  }, [sheet])
 
   const area = farmZones.reduce((a, z) => a + z.areaM2, 0)
 
@@ -136,7 +139,7 @@ export default function MapHome() {
 }
 
 type ZoneSheetProps = {
-  ref: React.Ref<HTMLElement>
+  ref: React.RefObject<HTMLElement | null>
   state: SheetState
   onToggle: () => void
   onSet: (s: SheetState) => void
@@ -174,28 +177,61 @@ const SWIPE_PX = 36
 
 function ZoneSheet({ ref, state, onToggle, onSet, zone, today, recordCount, cards, inventory, pestName, onScan, onPests }: ZoneSheetProps) {
   const startY = useRef<number | null>(null)
+  const startOffset = useRef(0)
+  const body = useRef<HTMLDivElement>(null)
   const planted = !!zone.plantedAt && zone.plantedAt <= today
   const [anim, setAnim] = useState(0)
   useEffect(() => setAnim((n) => n + 1), [zone.id])
+
+  // 닫힌 시트는 머리 부분만 보이도록 나머지 높이만큼 아래로 내려 둔다
+  useLayoutEffect(() => {
+    const el = ref.current
+    const content = body.current
+    if (!el || !content) return
+    const update = () => el.style.setProperty('--closed', `${el.offsetHeight - content.offsetTop}px`)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    ro.observe(content)
+    return () => ro.disconnect()
+  }, [ref])
+
+  useEffect(() => {
+    if (state === 'min' && ref.current) ref.current.scrollTop = 0
+  }, [state, ref])
+
+  const closedOffset = () => parseFloat(ref.current?.style.getPropertyValue('--closed') ?? '') || 0
+  const release = () => {
+    startY.current = null
+    ref.current?.classList.remove('is-dragging')
+    ref.current?.style.removeProperty('transform')
+  }
 
   const swiped = useRef(false)
 
   // 손가락이 손잡이 밖으로 나가도 끝나는 위치를 받도록 포인터를 잡아 둔다
   const onDown = (e: PointerEvent) => {
     startY.current = e.clientY
+    startOffset.current = state === 'open' ? 0 : closedOffset()
     swiped.current = false
     e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  // 손가락을 따라 움직인다
+  const onMove = (e: PointerEvent) => {
+    if (startY.current == null || !ref.current) return
+    const offset = startOffset.current + e.clientY - startY.current
+    ref.current.classList.add('is-dragging')
+    ref.current.style.transform = `translateY(${Math.min(Math.max(offset, 0), closedOffset())}px)`
   }
   const onUp = (e: PointerEvent) => {
     if (startY.current == null) return
     const dy = e.clientY - startY.current
-    startY.current = null
+    release()
     if (Math.abs(dy) <= SWIPE_PX) return
     swiped.current = true
     onSet(dy > 0 ? 'min' : 'open')
   }
-  const onCancel = () => (startY.current = null)
-  const swipe = { onPointerDown: onDown, onPointerUp: onUp, onPointerCancel: onCancel }
+  const swipe = { onPointerDown: onDown, onPointerMove: onMove, onPointerUp: onUp, onPointerCancel: release }
 
   return (
     <section ref={ref} className="zone-sheet" data-state={state} aria-label={`${zoneName(zone)} 정보`}>
@@ -239,8 +275,8 @@ function ZoneSheet({ ref, state, onToggle, onSet, zone, today, recordCount, card
         </ul>
       </div>
 
-      {state === 'open' && (
-        <div className="zone-sheet__body">
+      {/* 닫혀 있을 때도 그려 두어야 열리면서 내용이 함께 올라온다. inert는 닫힌 내용의 선택을 막는다 */}
+      <div ref={body} className="zone-sheet__body" inert={state !== 'open'}>
           <div className="zs-section-head">
             <h3>{pestName ? `${pestName}에 쓸 약` : '쓸 수 있는 약'}</h3>
             <button type="button" className="text-btn" onClick={onPests}>
@@ -278,8 +314,7 @@ function ZoneSheet({ ref, state, onToggle, onSet, zone, today, recordCount, card
               병해충으로 찾기
             </button>
           </div>
-        </div>
-      )}
+      </div>
     </section>
   )
 }

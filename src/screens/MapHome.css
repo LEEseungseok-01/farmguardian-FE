@@ -18,7 +18,7 @@
   left: 0;
   width: 100%;
   overflow: visible;
-  transition: top 0.25s ease, height 0.25s ease;
+  transition: top 0.34s cubic-bezier(0.22, 1, 0.36, 1), height 0.34s cubic-bezier(0.22, 1, 0.36, 1);
   touch-action: manipulation;
 }
 
@@ -185,6 +185,17 @@
   background: var(--surface);
   border-top: 1px solid var(--line);
   box-shadow: 0 -12px 32px var(--shadow);
+  transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.zone-sheet[data-state='min'] {
+  overflow: hidden;
+  transform: translateY(var(--closed, 0px));
+}
+
+.zone-sheet.is-dragging {
+  transition: none;
 }
 
 .zone-sheet__handle {
@@ -267,7 +278,6 @@
   flex-direction: column;
   gap: 10px;
   padding-top: 10px;
-  animation: rise 0.25s ease;
 }
 
 .zs-section-head {
