@@ -192,7 +192,7 @@
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  margin: 0 0 var(--sp-3);
+  margin: 0 var(--sp-4) var(--sp-3);
   padding: var(--sp-3);
   border-radius: var(--r-md);
   background: var(--surface-2);
@@ -204,6 +204,10 @@
 .fold--warn .nbr__flag {
   background: var(--caution-bg);
   color: var(--caution-fg);
+}
+
+.nbr__line {
+  display: block;
 }
 
 .nbr__flag .icon {
