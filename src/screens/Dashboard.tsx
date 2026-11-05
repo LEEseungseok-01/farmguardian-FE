@@ -197,12 +197,21 @@ export default function Dashboard() {
               <Icon name="caret-down" size={18} />
             </summary>
             <p className="nbr__why">
-              벌레는 밭 경계를 안 지켜요. 옆 밭에서 많이 쓴 계통은 벌레가 이미 겪어 봐서, 내 밭에서 처음 써도 덜 들을 수 있어요.
+              <span className="nbr__line">벌레는 옆 밭으로도 옮겨 다녀요.</span>
+              <span className="nbr__line">이웃 농가와 같은 그룹의 약을 자주 쓰면 내 밭에서 약이 잘 듣지 않을 수 있어요.</span>
             </p>
             <p className="nbr__flag">
               <Icon name={overlap ? 'warning' : 'check-circle'} weight="fill" size={18} />
-              {currentFarm.region} 농가 {Math.round(regionShare * 100)}%가 그룹 {groupLabel(regionTop)} 약을 써요
-              {overlap ? `. 올해 쓴 ${overlap.names[0]}도 ${regionTop}번이에요` : ''}
+              <span>
+                <span className="nbr__line">
+                  {currentFarm.region} 농가 {Math.round(regionShare * 100)}%가 그룹 {groupLabel(regionTop)} 약을 써요.
+                </span>
+                {overlap && (
+                  <span className="nbr__line">
+                    올해 쓴 {overlap.names[0]}도 그룹 {groupLabel(regionTop)}번이에요
+                  </span>
+                )}
+              </span>
             </p>
             <ul className="region-list">
               {regionRows.map(({ r, g, share }) => (
@@ -221,7 +230,8 @@ export default function Dashboard() {
               ))}
             </ul>
             <p className="fine">
-              막대가 길수록 그 면이 한 계통에 몰려 있어요. {county} {zone.crop} 농가 {num(regionFarms)}곳 기록이고, 농가 이름은 공개되지 않아요.
+              <span className="nbr__line">막대가 길수록 그 면의 농가들이 같은 그룹 약을 많이 썼다는 뜻이에요</span>
+              <span className="nbr__line">({county} {zone.crop} 농가 {num(regionFarms)}곳 기준)</span>
             </p>
           </details>
         )}
