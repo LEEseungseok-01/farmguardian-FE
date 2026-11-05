@@ -44,7 +44,7 @@ const TOURS: Record<string, Step[]> = {
     {
       sel: '.bottom-nav',
       icon: 'map-trifold',
-      title: '아래로 옮겨 다녀요',
+      title: '다른 메뉴로 이동해요',
       body: '약을 직접 찾거나, 뿌린 기록과 통계를 봐요.',
       pad: 0,
     },
