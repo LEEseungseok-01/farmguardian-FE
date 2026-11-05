@@ -14,7 +14,8 @@ import './ScanSheet.css'
 
 type Phase = 'idle' | 'reading' | 'done'
 
-type Scan = { lines: string[]; cands: { drug: Drug; match: string }[] }
+/** summary는 읽어 낸 상표·품목·제조사 (못 읽은 값은 뺀다) */
+type Scan = { lines: string[]; summary?: string[]; cands: { drug: Drug; match: string }[] }
 type OcrResult = {
   candidates: { pesticide: ServerPesticide; matched: string[] }[]
   read: { brand: string | null; product: string | null; company: string | null; text: string }
@@ -38,8 +39,10 @@ const SAMPLE: Scan = {
 
 function fromOcr(r: OcrResult): Scan {
   const lines = r.read.text.split('\n').filter(Boolean)
+  const summary = [r.read.brand, r.read.product, r.read.company].filter((x): x is string => !!x)
   return {
-    lines: lines.length ? lines : [r.read.brand, r.read.product, r.read.company].filter((x): x is string => !!x),
+    lines,
+    summary,
     cands: r.candidates.map((c) => ({
       drug: toDrug(c.pesticide),
       match: c.matched.length ? `${c.matched.map((m) => FIELD[m] ?? m).join('·')}이 맞아요` : '',
@@ -204,16 +207,27 @@ export default function ScanSheet() {
             <div className="scan-ocr">
               <p className="scan-ocr__label">
                 <Icon name="text-aa" size={18} />
-                포장지에서 읽은 글자
+                {phase === 'done' && shown?.summary?.length ? '읽은 내용' : '포장지에서 읽은 글자'}
               </p>
               {phase === 'reading' ? (
                 <p className="scan-ocr__loading" aria-live="polite">글자를 읽고 있어요</p>
+              ) : shown?.summary?.length ? (
+                <>
+                  <div className="scan-ocr__summary">
+                    <strong>{shown.summary[0]}</strong>
+                    {shown.summary.slice(1).map((s) => (
+                      <span key={s}>{s}</span>
+                    ))}
+                  </div>
+                  {shown.lines.length > 0 && (
+                    <details className="scan-ocr__more">
+                      <summary>읽은 글자 전체 보기</summary>
+                      <ReadLines lines={shown.lines} />
+                    </details>
+                  )}
+                </>
               ) : (
-                <ul className="scan-ocr__lines" aria-label="읽은 그대로">
-                  {(shown?.lines ?? []).map((l) => (
-                    <li key={l}>{l}</li>
-                  ))}
-                </ul>
+                <ReadLines lines={shown?.lines ?? []} />
               )}
               <button type="button" className="text-btn" onClick={() => setPhase('idle')}>
                 <Icon name="arrow-counter-clockwise" size={16} />
@@ -288,6 +302,16 @@ export default function ScanSheet() {
         </li>
       </ul>
     </Sheet>
+  )
+}
+
+function ReadLines({ lines }: { lines: string[] }) {
+  return (
+    <ul className="scan-ocr__lines" aria-label="읽은 그대로">
+      {lines.map((l) => (
+        <li key={l}>{l}</li>
+      ))}
+    </ul>
   )
 }
 
