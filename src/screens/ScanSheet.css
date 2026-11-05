@@ -172,6 +172,10 @@
   overflow-wrap: anywhere;
 }
 
+.scan-retry {
+  align-self: center;
+}
+
 .scan-ocr__summary {
   display: flex;
   flex-direction: column;
