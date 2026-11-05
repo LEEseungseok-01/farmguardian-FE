@@ -25,7 +25,7 @@ const TOURS: Record<string, Step[]> = {
       sel: '.map-top',
       icon: 'cloud-sun',
       title: '밭과 오늘 날씨',
-      body: '밭 이름을 누르면 다른 밭으로 바꿔요. 아래 줄은 오늘 뿌려도 되는 날인지 알려 줘요.',
+      body: '밭 이름을 누르면 다른 밭으로 바꿔요.',
     },
     {
       sel: '.map-stage .field-map',
@@ -115,7 +115,7 @@ const TOURS: Record<string, Step[]> = {
       sel: '.facts',
       icon: 'clipboard-text',
       title: '판정 근거와 출처',
-      body: '수확 전 일수, 남은 횟수, 희석 배수를 그대로 보여 줘요. 어느 자료에서 왔는지도 아래에 적혀 있어요.',
+      body: '수확 전 일수, 남은 횟수, 그룹을 보여 줘요. 어느 자료에서 왔는지도 아래에 적혀 있어요.',
     },
     {
       sel: '.cta-bar',
@@ -143,7 +143,7 @@ const TOURS: Record<string, Step[]> = {
       sel: '.rec-list > li',
       icon: 'note-pencil',
       title: '잘못 적었으면 고쳐요',
-      body: '취소해도 지워지지 않고 취소 표시로 남아요. 농약관리법상 증빙이라 보관해야 해요.',
+      body: '취소해도 지워지지 않고 취소 표시로 남아요.',
     },
     {
       sel: '.fab-bar',
@@ -192,7 +192,7 @@ const TOURS: Record<string, Step[]> = {
       sel: '.fold',
       icon: 'trend-up',
       title: '이웃 농가는 뭘 쓰나',
-      body: '같은 시군 같은 작물 기록이에요. 옆 밭에서 많이 쓴 계통은 내 밭에서 처음 써도 덜 들을 수 있어요.',
+      body: '같은 시군 같은 작물 기록이에요. 이웃 농가와 같은 그룹의 약을 자주 쓰면 내 밭에서 약이 잘 듣지 않을 수 있어요.',
     },
   ],
 }
