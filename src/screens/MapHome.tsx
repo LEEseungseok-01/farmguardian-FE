@@ -170,36 +170,51 @@ function WeatherLine() {
   )
 }
 
+const SWIPE_PX = 36
+
 function ZoneSheet({ ref, state, onToggle, onSet, zone, today, recordCount, cards, inventory, pestName, onScan, onPests }: ZoneSheetProps) {
   const startY = useRef<number | null>(null)
   const planted = !!zone.plantedAt && zone.plantedAt <= today
   const [anim, setAnim] = useState(0)
   useEffect(() => setAnim((n) => n + 1), [zone.id])
 
-  const onDown = (e: PointerEvent) => (startY.current = e.clientY)
+  const swiped = useRef(false)
+
+  // 손가락이 손잡이 밖으로 나가도 끝나는 위치를 받도록 포인터를 잡아 둔다
+  const onDown = (e: PointerEvent) => {
+    startY.current = e.clientY
+    swiped.current = false
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
   const onUp = (e: PointerEvent) => {
     if (startY.current == null) return
     const dy = e.clientY - startY.current
     startY.current = null
-    if (dy > 36) onSet('min')
-    else if (dy < -36) onSet('open')
+    if (Math.abs(dy) <= SWIPE_PX) return
+    swiped.current = true
+    onSet(dy > 0 ? 'min' : 'open')
   }
+  const onCancel = () => (startY.current = null)
+  const swipe = { onPointerDown: onDown, onPointerUp: onUp, onPointerCancel: onCancel }
 
   return (
     <section ref={ref} className="zone-sheet" data-state={state} aria-label={`${zoneName(zone)} 정보`}>
       <button
         type="button"
         className="zone-sheet__handle"
-        onClick={onToggle}
-        onPointerDown={onDown}
-        onPointerUp={onUp}
+        // 스와이프 뒤에 따라오는 클릭으로 시트가 도로 닫히지 않게 한다
+        onClick={() => {
+          if (!swiped.current) onToggle()
+          swiped.current = false
+        }}
+        {...swipe}
         aria-expanded={state === 'open'}
         aria-label={state === 'open' ? '구역 정보 접기' : '구역 정보 펼치기'}
       >
         <span aria-hidden="true" />
       </button>
 
-      <div className="zone-sheet__head" key={`h${anim}`}>
+      <div className="zone-sheet__head" key={`h${anim}`} {...swipe}>
         <div className="zone-sheet__title-row">
           <h2 className="zone-sheet__title">{zoneName(zone)}</h2>
           <span className="crop-chip">{zone.crop}</span>
