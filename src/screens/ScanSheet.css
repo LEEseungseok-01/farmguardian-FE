@@ -168,7 +168,34 @@
   font-family: var(--font-mono);
   font-size: var(--fs-sm);
   line-height: 1.6;
-  word-break: break-all;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.scan-ocr__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.scan-ocr__summary strong {
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  color: var(--text);
+}
+
+.scan-ocr__more {
+  width: 100%;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+
+.scan-ocr__more summary {
+  padding: var(--sp-1) 0;
+  cursor: pointer;
+  font-weight: 700;
 }
 
 .scan-ocr__loading {
